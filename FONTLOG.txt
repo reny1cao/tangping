@@ -1,0 +1,68 @@
+FONTLOG for Tangping (躺平体)
+=============================
+
+This file provides detailed information on the Tangping font software.
+This information should be distributed along with the Tangping fonts and
+any derivative works.
+
+
+Basic Font Information
+----------------------
+
+Tangping is a display typeface whose Latin letters are drawn as bold Hei
+(sans-serif) Chinese characters lying on their side. The idea: turn 曼 a
+quarter-turn, cut it straight across, and its three parts read M A N.
+
+Two styles share one design:
+- Tangping Regular: capitals M N V W X Y Z sit short, as in the original MAN.
+- Tangping Even: every capital is tall.
+In both, lowercase is the short form of every letter, so case controls the
+height of each letter.
+
+Character set: Basic Latin, Latin-1 letters and symbols, Œ œ Š š Ž ž Ÿ ı,
+general punctuation, € ™, arrows and the corner brackets 「 」 (205 glyphs).
+
+The fonts are generated from code (sources/build.py). Every glyph is
+built from a small set of stroke primitives: stems, bars with concave
+flared ends, 撇 (falling, tapering) and 捺 (rising, overshooting) strokes.
+
+
+Information for Contributors
+----------------------------
+
+Edit sources/build.py and run `make` to rebuild the fonts and web fonts.
+Run `make check` to validate with OTS and Font Bakery before a release.
+The research/ folder contains the tools used to find a real source
+character for each letter; they need Noto Sans CJK (SIL OFL), which is
+not part of this font and is not redistributed here.
+
+
+ChangeLog
+---------
+
+21 October 2026 (The Tangping Project Authors) Tangping v3.100
+- Letters redrawn to follow their source characters; distribution metadata;
+  kerning for wide T; source map.
+
+21 October 2026 (The Tangping Project Authors) Tangping v3.000
+- Lowercase, accented Latin, punctuation and symbols, kerning, web fonts.
+
+21 October 2026 (The Tangping Project Authors) Tangping v2.000
+- M, A, N traced from the 曼 → MAN reference; stroke system derived from it.
+
+
+Acknowledgements
+----------------
+
+N: Rocco
+D: Concept, art direction
+
+N: Claude (Anthropic)
+D: Glyph construction, build and research tooling (AI collaborator)
+
+N: サイバー環状線 (@CyberKanjousen on X)
+D: Original idea: their 21 October 2026 post showing 曼 split into MAN
+
+The outlines in Tangping are new drawings built from stroke rules; the
+original illustration is not included or redistributed.
+If you share Tangping, please credit the idea to @CyberKanjousen.

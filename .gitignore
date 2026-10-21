@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+research/*.pkl
+research/*.png
+.DS_Store
+.venv/

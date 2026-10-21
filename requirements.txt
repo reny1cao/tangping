@@ -1,0 +1,13 @@
+# build
+fonttools[woff]>=4.50
+skia-pathops>=0.8
+# research tools and docs
+Pillow>=10
+numpy>=1.26
+# motion piece, music and README images (optional; also needs ffmpeg and Noto Sans CJK)
+scipy>=1.11
+pycairo>=1.25
+uharfbuzz>=0.39
+# checks (optional)
+opentype-sanitizer>=9
+fontbakery>=0.12

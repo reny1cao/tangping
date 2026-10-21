@@ -1,0 +1,400 @@
+<title>躺平体 Tangping</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column on 田字格 practice paper — hero demo, live tester, rules, full glyph set */
+:root {
+  --paper: #f6f8f5;
+  --ink: #111513;
+  --muted: #5b6a61;
+  --grid: #b9d8c2;
+  --grid-strong: #5c9f73;
+  --accent: #1d7346;
+  --panel: #ffffff;
+  --cut: #c4513a;
+  --display: "Tangping Regular", "Noto Sans SC", sans-serif;
+  --body: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111a15; --ink: #e8efe9; --muted: #98ab9f; --grid: #24402f;
+    --grid-strong: #4f9a6a; --accent: #74cf9b; --panel: #16221b; --cut: #f08a6c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111a15; --ink: #e8efe9; --muted: #98ab9f; --grid: #24402f;
+  --grid-strong: #4f9a6a; --accent: #74cf9b; --panel: #16221b; --cut: #f08a6c; color-scheme: dark;
+}
+
+@font-face { font-family: "Tangping Regular"; src: url(data:font/woff2;base64,__REG__) format("woff2"); font-display: block; }
+@font-face { font-family: "Tangping Even"; src: url(data:font/woff2;base64,__EVEN__) format("woff2"); font-display: block; }
+
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  display: grid; gap: 56px;
+}
+h1, h2 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- hero ---------- */
+.hero { display: grid; gap: 22px; }
+.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+.title h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 11vw, 120px); line-height: 1; letter-spacing: 0; }
+.title .zh { font-weight: 900; font-size: clamp(22px, 4vw, 34px); letter-spacing: .04em; }
+.lede { max-width: 58ch; color: var(--muted); font-size: 16px; }
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cell {
+  --s: clamp(74px, 21vw, 168px);
+  width: var(--s); height: var(--s); position: relative; flex: none;
+  border: 1.5px solid var(--grid-strong);
+  background:
+    linear-gradient(var(--grid), var(--grid)) center / 100% 1px no-repeat,
+    linear-gradient(var(--grid), var(--grid)) center / 1px 100% no-repeat,
+    var(--panel);
+  display: grid; place-items: center; overflow: hidden;
+}
+.cell .han { font-weight: 900; font-size: calc(var(--s) * .8); line-height: 1; }
+.cell .lying { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); animation: liedown 1.1s cubic-bezier(.6,0,.2,1) .5s both; }
+@keyframes liedown { from { transform: rotate(0deg); clip-path: inset(0 0 0 0); } 45% { transform: rotate(0deg); clip-path: inset(0 0 0 17%); } to { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); } }
+.cell.wide { width: auto; padding-inline: calc(var(--s) * .12); }
+.cell .latin { font-family: "Tangping Even"; font-size: calc(var(--s) * .62); line-height: 1; padding-top: calc(var(--s) * .08); }
+.arrow { font-family: var(--mono); color: var(--grid-strong); font-size: 22px; }
+.demo-cap { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ---------- tester ---------- */
+.tester { display: grid; gap: 14px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+.seg { display: inline-flex; border: 1.5px solid var(--grid-strong); }
+.seg button {
+  font: 500 13px/1 var(--body); padding: 9px 14px; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+}
+.seg button + button { border-left: 1.5px solid var(--grid-strong); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--paper); }
+.size { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.size input { width: 160px; accent-color: var(--accent); }
+.size output { min-width: 4ch; font-variant-numeric: tabular-nums; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  font: 13px/1 var(--body); padding: 8px 12px; cursor: pointer; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--grid);
+}
+.chips button:hover { border-color: var(--grid-strong); }
+.stage {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--lh) - 1px), var(--grid) calc(var(--lh) - 1px), var(--grid) var(--lh)),
+    var(--panel);
+  border: 1.5px solid var(--grid-strong);
+  padding: 10px 14px 4px;
+}
+#sample {
+  --size: 96px; --lh: calc(var(--size) * 1.3);
+  display: block; width: 100%; box-sizing: border-box; resize: none; overflow: hidden;
+  border: 0; outline: none; background: transparent; color: var(--ink);
+  font-family: var(--display); font-size: var(--size); line-height: var(--lh);
+  min-height: var(--lh); padding: 0; word-break: break-word;
+}
+.stage:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { --lh: calc(var(--size, 96px) * 1.3); }
+
+/* ---------- rules ---------- */
+.section-head { display: grid; gap: 6px; }
+.section-head h2 { font-size: 22px; font-weight: 900; letter-spacing: .02em; }
+.rules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1.5px solid var(--grid-strong); background: var(--panel); }
+.rule { padding: 16px 16px 18px; display: grid; gap: 8px; align-content: start; }
+.rule + .rule { border-left: 1px solid var(--grid); }
+.rule .g { font-family: var(--display); font-size: 92px; line-height: 1.1; height: 112px; display: flex; align-items: flex-end; }
+.rule h3 { margin: 0; font-size: 15px; font-weight: 900; }
+.rule p { color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+.rule .nums { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+
+/* metrics figure */
+.metrics { position: relative; border: 1.5px solid var(--grid-strong); background: var(--panel); overflow-x: auto; }
+.metrics-inner { position: relative; padding: 34px 24px 0 92px; min-width: 520px; }
+.metrics .word { font-family: "Tangping Even"; font-size: 200px; line-height: 1.15; white-space: nowrap; position: relative; z-index: 1; }
+.guide { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--grid-strong); z-index: 0; }
+.guide span { position: absolute; left: 12px; top: -9px; font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--panel); padding-right: 6px; font-variant-numeric: tabular-nums; }
+.guide.base { border-top-style: solid; }
+
+
+/* ---------- source map ---------- */
+.sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0; border-top: 1px solid var(--grid); border-left: 1px solid var(--grid); background: var(--panel); }
+.src { border-right: 1px solid var(--grid); border-bottom: 1px solid var(--grid); padding: 12px 12px 10px; display: grid; gap: 8px; grid-template-rows: auto 1fr auto; min-width: 0; }
+.src-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.src-han { font-weight: 700; font-size: 30px; line-height: 1; }
+.src-how { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: right; line-height: 1.35; }
+.src svg { width: 100%; height: 96px; display: block; overflow: visible; }
+.src .full { fill: var(--grid); }
+.src .piece { fill: var(--ink); }
+.src .cutline { stroke: var(--cut); stroke-width: 14; stroke-dasharray: 34 22; }
+.src-bot { display: flex; align-items: baseline; justify-content: space-between; }
+.src-letter { font-family: var(--display); font-size: 40px; line-height: 1; }
+.src-score { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.src.weak .src-score { color: var(--cut); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 22px; height: 10px; vertical-align: middle; margin-right: 6px; }
+.legend .k1 { background: var(--grid); } .legend .k2 { background: var(--ink); } .legend .k3 { border-top: 2px dashed var(--cut); height: 0; }
+
+/* ---------- glyphs ---------- */
+.glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); border-top: 1px solid var(--grid); border-left: 1px solid var(--grid); background: var(--panel); }
+.glyphs button {
+  border: 0; border-right: 1px solid var(--grid); border-bottom: 1px solid var(--grid);
+  background: transparent; color: var(--ink); cursor: pointer; padding: 6px 0 4px;
+  display: grid; justify-items: center; gap: 2px;
+}
+.glyphs button:hover, .glyphs button:focus-visible { background: var(--paper); outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.glyphs .ch { font-family: var(--display); font-size: 36px; line-height: 1.35; }
+.glyphs .cp { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.glyph-tools { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+
+.note { color: var(--muted); font-size: 13.5px; max-width: 70ch; }
+footer { display: grid; gap: 6px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--grid); padding-top: 18px; }
+footer .files { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+footer a, .credit a { color: var(--accent); text-underline-offset: 3px; }
+.credit { font-size: 13.5px; color: var(--muted); }
+
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rule:nth-child(3) { border-left: 0; }
+  .rule:nth-child(n+3) { border-top: 1px solid var(--grid); }
+  .rule .g { font-size: 72px; height: 92px; }
+  .metrics .word { font-size: 150px; }
+}
+@media (prefers-reduced-motion: reduce) { .cell .lying { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="title">
+      <h1 id="title-word">Tangping</h1>
+      <span class="zh">躺平体</span>
+    </div>
+    <p class="lede">A display face where every Latin letter is a bold Hei hanzi lying on its side. Lay 曼 down, slice off its left edge, and it reads MAN. The whole alphabet is drawn on the same rules.</p>
+    <p class="credit">Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X).</p>
+    <div class="demo" aria-label="曼 rotated a quarter turn reads as MAN">
+      <div class="cell"><span class="han">曼</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="cell"><span class="han lying">曼</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="cell wide"><span class="latin">mAn</span></div>
+    </div>
+    <div class="demo-cap"><span>stand</span><span>·</span><span>lie down, cut</span><span>·</span><span>read</span></div>
+  </header>
+
+  <section class="tester" aria-labelledby="try-h">
+    <div class="section-head">
+      <span class="label">Type tester</span>
+      <h2 id="try-h">Try it</h2>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Style">
+        <button type="button" id="style-reg" aria-pressed="true">Regular</button>
+        <button type="button" id="style-even" aria-pressed="false">Even</button>
+      </div>
+      <label class="size" for="size">Size
+        <input type="range" id="size" min="28" max="220" value="96">
+        <output id="size-out" for="size">96px</output>
+      </label>
+    </div>
+    <div class="chips" id="chips">
+      <button type="button">mAn</button>
+      <button type="button">LIE FLAT. STAND TALL.</button>
+      <button type="button">turn · cut · read</button>
+      <button type="button">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</button>
+      <button type="button">¡OLÉ! ÇA VA? GRÜSSE</button>
+      <button type="button">「TANG PING」 躺平 → 2026</button>
+    </div>
+    <div class="stage">
+      <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">LIE FLAT. STAND TALL.</textarea>
+    </div>
+    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.</p>
+  </section>
+
+  <section aria-labelledby="rules-h" style="display:grid;gap:18px">
+    <div class="section-head">
+      <span class="label">How it is drawn</span>
+      <h2 id="rules-h">Four rules from one character</h2>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <div class="g">A</div>
+        <h3>Thick bars, thin stems</h3>
+        <p>Bars are Hei vertical strokes turned sideways, so they carry more weight than the stems.</p>
+        <span class="nums">bar 135 · stem 100</span>
+      </div>
+      <div class="rule">
+        <div class="g">m</div>
+        <h3>Cut at the baseline</h3>
+        <p>Every stem ends in a straight slice, where the character's left edge was cut away.</p>
+        <span class="nums">flat cut · y = 0</span>
+      </div>
+      <div class="rule">
+        <div class="g">n</div>
+        <h3>撇 down, 捺 up</h3>
+        <p>Strokes falling to the right taper like 撇. Strokes rising to the right sweep past the top like 捺.</p>
+        <span class="nums">tip +175 over stem</span>
+      </div>
+      <div class="rule">
+        <div class="g">Hh</div>
+        <h3>Two heights</h3>
+        <p>Tall and short forms come from wide and narrow parts of the source character.</p>
+        <span class="nums">689 · 527</span>
+      </div>
+    </div>
+    <div class="metrics" aria-label="Vertical metrics of mAn in font units">
+      <div class="metrics-inner" id="metrics">
+        <div class="word" id="metrics-word">mAn</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section aria-labelledby="src-h" style="display:grid;gap:14px">
+    <div class="section-head">
+      <span class="label">Source map</span>
+      <h2 id="src-h">Every letter is a real character, turned and cut</h2>
+    </div>
+    <p class="note">Each source was found by searching all 6,763 GB2312 characters in a bold Hei font: turn a quarter-turn, then cut straight across, at most half. The score compares the cut piece with the Tangping letter (1.00 is identical). Y has no clean source; 卡 is the closest. C, E, F, H, K, R and T were redrawn to follow their sources: 冂's hook, 山's long middle arm, 工's short left stroke, 刀's curved leg, 十's wide bar.</p>
+    <div class="legend"><span><i class="k1"></i>turned character</span><span><i class="k2"></i>kept piece</span><span><i class="k3"></i>cut</span></div>
+    <div class="sources" id="sources"></div>
+  </section>
+
+  <section aria-labelledby="glyphs-h" style="display:grid;gap:14px">
+    <div class="glyph-tools">
+      <div class="section-head">
+        <span class="label">Character set</span>
+        <h2 id="glyphs-h"><span id="glyph-count">0</span> glyphs</h2>
+      </div>
+      <span class="label">Tap a glyph to add it to the tester</span>
+    </div>
+    <div class="glyphs" id="glyphs"></div>
+  </section>
+
+  <footer>
+    <span class="files">Tangping-Regular.otf · Tangping-Even.otf · .woff2 for the web</span>
+    <span>Version 3.0. Basic Latin, Western European accents, Œ Š Ž Ÿ, punctuation, currency, arrows and 「」. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const CHARS = __CHARS__;
+  const sample = document.getElementById('sample');
+  const size = document.getElementById('size');
+  const sizeOut = document.getElementById('size-out');
+  const btnReg = document.getElementById('style-reg');
+  const btnEven = document.getElementById('style-even');
+  const note = document.getElementById('style-note');
+  const root = document.documentElement;
+
+  function fit() {
+    sample.style.height = 'auto';
+    sample.style.height = sample.scrollHeight + 'px';
+  }
+  function setSize(v) {
+    sample.style.setProperty('--size', v + 'px');
+    sample.parentElement.style.setProperty('--size', v + 'px');
+    sizeOut.textContent = v + 'px';
+    fit();
+  }
+  function setStyle(even) {
+    btnReg.setAttribute('aria-pressed', String(!even));
+    btnEven.setAttribute('aria-pressed', String(even));
+    root.style.setProperty('--display', (even ? '"Tangping Even"' : '"Tangping Regular"') + ', "Noto Sans SC", sans-serif');
+    note.textContent = even
+      ? 'Even: every capital is tall. Lowercase is still the short form, so case controls the bounce.'
+      : 'Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.';
+    requestAnimationFrame(fit);
+  }
+
+  const startSize = window.innerWidth < 520 ? 64 : 96;
+  size.value = startSize;
+  setSize(startSize);
+  size.addEventListener('input', () => setSize(size.value));
+  sample.addEventListener('input', fit);
+  btnReg.addEventListener('click', () => setStyle(false));
+  btnEven.addEventListener('click', () => setStyle(true));
+  document.getElementById('chips').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    sample.value = b.textContent; fit();
+  });
+
+  // glyph grid
+  const grid = document.getElementById('glyphs');
+  const frag = document.createDocumentFragment();
+  for (const ch of CHARS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const cp = ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+    b.setAttribute('aria-label', 'U+' + cp);
+    b.innerHTML = '<span class="ch"></span><span class="cp">' + cp + '</span>';
+    b.firstChild.textContent = ch;
+    b.addEventListener('click', () => { sample.value += ch; fit(); });
+    frag.appendChild(b);
+  }
+  grid.appendChild(frag);
+  document.getElementById('glyph-count').textContent = CHARS.length;
+
+
+  // source map
+  const SOURCES = __SOURCES__;
+  const box = document.getElementById('sources');
+  const NS = 'http://www.w3.org/2000/svg';
+  for (const s of SOURCES) {
+    const card = document.createElement('div');
+    card.className = 'src' + (s.L === 'Y' ? ' weak' : '');
+    const turn = s.turn === 'ccw' ? '↺ 90°' : '↻ 90°';
+    const cut = [s.cut ? 'cut ' + s.cut + '%' : '', s.top ? 'top ' + s.top + '%' : '', s.band ? 'one part' : ''].filter(Boolean).join(' · ') || 'no cut';
+    card.innerHTML = '<div class="src-top"><span class="src-han"></span><span class="src-how"></span></div>' +
+      '<svg viewBox="0 0 ' + s.w + ' ' + s.h + '" preserveAspectRatio="xMidYMax meet" role="img"></svg>' +
+      '<div class="src-bot"><span class="src-letter"></span><span class="src-score"></span></div>';
+    card.querySelector('.src-han').textContent = s.ch;
+    card.querySelector('.src-how').innerHTML = turn + '<br>' + cut;
+    card.querySelector('.src-letter').textContent = s.L;
+    card.querySelector('.src-score').textContent = (s.L === 'Y' ? 'closest ' : '') + s.score.toFixed(2);
+    const svg = card.querySelector('svg');
+    svg.setAttribute('aria-label', s.ch + ' turned ' + (s.turn === 'ccw' ? 'counter-clockwise' : 'clockwise') + ' and cut, reads ' + s.L);
+    const full = document.createElementNS(NS, 'path'); full.setAttribute('d', s.full); full.setAttribute('class', 'full');
+    const piece = document.createElementNS(NS, 'path'); piece.setAttribute('d', s.piece); piece.setAttribute('class', 'piece');
+    svg.append(full, piece);
+    for (const [dir, v] of s.cuts) {
+      const ln = document.createElementNS(NS, 'line'); ln.setAttribute('class', 'cutline');
+      if (dir === 'h') { ln.setAttribute('x1', -40); ln.setAttribute('x2', s.w + 40); ln.setAttribute('y1', v); ln.setAttribute('y2', v); }
+      else { ln.setAttribute('y1', -40); ln.setAttribute('y2', s.h + 40); ln.setAttribute('x1', v); ln.setAttribute('x2', v); }
+      svg.append(ln);
+    }
+    box.appendChild(card);
+  }
+
+  // metrics guides: measure the real baseline, then place lines in font units
+  function drawGuides() {
+    const box = document.getElementById('metrics');
+    const word = document.getElementById('metrics-word');
+    box.querySelectorAll('.guide').forEach(g => g.remove());
+    const probe = document.createElement('span');
+    probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+    word.appendChild(probe);
+    const fs = parseFloat(getComputedStyle(word).fontSize);
+    const base = probe.offsetTop + word.offsetTop;
+    probe.remove();
+    [[0, 'baseline 0'], [527, 'short 527'], [689, 'tall 689'], [774, 'tip 774']].forEach(([u, name]) => {
+      const g = document.createElement('div');
+      g.className = 'guide' + (u === 0 ? ' base' : '');
+      g.style.top = (base - u / 1000 * fs) + 'px';
+      g.innerHTML = '<span></span>';
+      g.firstChild.textContent = name;
+      box.appendChild(g);
+    });
+  }
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { drawGuides(); fit(); });
+  window.addEventListener('resize', () => { drawGuides(); fit(); });
+})();
+</script>

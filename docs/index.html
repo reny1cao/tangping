@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>躺平体 Tangping</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column on 田字格 practice paper — hero demo, live tester, rules, full glyph set */
+:root {
+  --paper: #f6f8f5;
+  --ink: #111513;
+  --muted: #5b6a61;
+  --grid: #b9d8c2;
+  --grid-strong: #5c9f73;
+  --accent: #1d7346;
+  --panel: #ffffff;
+  --cut: #c4513a;
+  --display: "Tangping Regular", "Noto Sans SC", sans-serif;
+  --body: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111a15; --ink: #e8efe9; --muted: #98ab9f; --grid: #24402f;
+    --grid-strong: #4f9a6a; --accent: #74cf9b; --panel: #16221b; --cut: #f08a6c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111a15; --ink: #e8efe9; --muted: #98ab9f; --grid: #24402f;
+  --grid-strong: #4f9a6a; --accent: #74cf9b; --panel: #16221b; --cut: #f08a6c; color-scheme: dark;
+}
+
+@font-face { font-family: "Tangping Regular"; src: url(data:font/woff2;base64,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) format("woff2"); font-display: block; }
+@font-face { font-family: "Tangping Even"; src: url(data:font/woff2;base64,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) format("woff2"); font-display: block; }
+
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  display: grid; gap: 56px;
+}
+h1, h2 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- hero ---------- */
+.hero { display: grid; gap: 22px; }
+.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+.title h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 11vw, 120px); line-height: 1; letter-spacing: 0; }
+.title .zh { font-weight: 900; font-size: clamp(22px, 4vw, 34px); letter-spacing: .04em; }
+.lede { max-width: 58ch; color: var(--muted); font-size: 16px; }
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cell {
+  --s: clamp(74px, 21vw, 168px);
+  width: var(--s); height: var(--s); position: relative; flex: none;
+  border: 1.5px solid var(--grid-strong);
+  background:
+    linear-gradient(var(--grid), var(--grid)) center / 100% 1px no-repeat,
+    linear-gradient(var(--grid), var(--grid)) center / 1px 100% no-repeat,
+    var(--panel);
+  display: grid; place-items: center; overflow: hidden;
+}
+.cell .han { font-weight: 900; font-size: calc(var(--s) * .8); line-height: 1; }
+.cell .lying { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); animation: liedown 1.1s cubic-bezier(.6,0,.2,1) .5s both; }
+@keyframes liedown { from { transform: rotate(0deg); clip-path: inset(0 0 0 0); } 45% { transform: rotate(0deg); clip-path: inset(0 0 0 17%); } to { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); } }
+.cell.wide { width: auto; padding-inline: calc(var(--s) * .12); }
+.cell .latin { font-family: "Tangping Even"; font-size: calc(var(--s) * .62); line-height: 1; padding-top: calc(var(--s) * .08); }
+.arrow { font-family: var(--mono); color: var(--grid-strong); font-size: 22px; }
+.demo-cap { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ---------- tester ---------- */
+.tester { display: grid; gap: 14px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+.seg { display: inline-flex; border: 1.5px solid var(--grid-strong); }
+.seg button {
+  font: 500 13px/1 var(--body); padding: 9px 14px; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+}
+.seg button + button { border-left: 1.5px solid var(--grid-strong); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--paper); }
+.size { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.size input { width: 160px; accent-color: var(--accent); }
+.size output { min-width: 4ch; font-variant-numeric: tabular-nums; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  font: 13px/1 var(--body); padding: 8px 12px; cursor: pointer; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--grid);
+}
+.chips button:hover { border-color: var(--grid-strong); }
+.stage {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--lh) - 1px), var(--grid) calc(var(--lh) - 1px), var(--grid) var(--lh)),
+    var(--panel);
+  border: 1.5px solid var(--grid-strong);
+  padding: 10px 14px 4px;
+}
+#sample {
+  --size: 96px; --lh: calc(var(--size) * 1.3);
+  display: block; width: 100%; box-sizing: border-box; resize: none; overflow: hidden;
+  border: 0; outline: none; background: transparent; color: var(--ink);
+  font-family: var(--display); font-size: var(--size); line-height: var(--lh);
+  min-height: var(--lh); padding: 0; word-break: break-word;
+}
+.stage:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { --lh: calc(var(--size, 96px) * 1.3); }
+
+/* ---------- rules ---------- */
+.section-head { display: grid; gap: 6px; }
+.section-head h2 { font-size: 22px; font-weight: 900; letter-spacing: .02em; }
+.rules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1.5px solid var(--grid-strong); background: var(--panel); }
+.rule { padding: 16px 16px 18px; display: grid; gap: 8px; align-content: start; }
+.rule + .rule { border-left: 1px solid var(--grid); }
+.rule .g { font-family: var(--display); font-size: 92px; line-height: 1.1; height: 112px; display: flex; align-items: flex-end; }
+.rule h3 { margin: 0; font-size: 15px; font-weight: 900; }
+.rule p { color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+.rule .nums { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+
+/* metrics figure */
+.metrics { position: relative; border: 1.5px solid var(--grid-strong); background: var(--panel); overflow-x: auto; }
+.metrics-inner { position: relative; padding: 34px 24px 0 92px; min-width: 520px; }
+.metrics .word { font-family: "Tangping Even"; font-size: 200px; line-height: 1.15; white-space: nowrap; position: relative; z-index: 1; }
+.guide { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--grid-strong); z-index: 0; }
+.guide span { position: absolute; left: 12px; top: -9px; font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--panel); padding-right: 6px; font-variant-numeric: tabular-nums; }
+.guide.base { border-top-style: solid; }
+
+
+/* ---------- source map ---------- */
+.sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0; border-top: 1px solid var(--grid); border-left: 1px solid var(--grid); background: var(--panel); }
+.src { border-right: 1px solid var(--grid); border-bottom: 1px solid var(--grid); padding: 12px 12px 10px; display: grid; gap: 8px; grid-template-rows: auto 1fr auto; min-width: 0; }
+.src-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.src-han { font-weight: 700; font-size: 30px; line-height: 1; }
+.src-how { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: right; line-height: 1.35; }
+.src svg { width: 100%; height: 96px; display: block; overflow: visible; }
+.src .full { fill: var(--grid); }
+.src .piece { fill: var(--ink); }
+.src .cutline { stroke: var(--cut); stroke-width: 14; stroke-dasharray: 34 22; }
+.src-bot { display: flex; align-items: baseline; justify-content: space-between; }
+.src-letter { font-family: var(--display); font-size: 40px; line-height: 1; }
+.src-score { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.src.weak .src-score { color: var(--cut); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 22px; height: 10px; vertical-align: middle; margin-right: 6px; }
+.legend .k1 { background: var(--grid); } .legend .k2 { background: var(--ink); } .legend .k3 { border-top: 2px dashed var(--cut); height: 0; }
+
+/* ---------- glyphs ---------- */
+.glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); border-top: 1px solid var(--grid); border-left: 1px solid var(--grid); background: var(--panel); }
+.glyphs button {
+  border: 0; border-right: 1px solid var(--grid); border-bottom: 1px solid var(--grid);
+  background: transparent; color: var(--ink); cursor: pointer; padding: 6px 0 4px;
+  display: grid; justify-items: center; gap: 2px;
+}
+.glyphs button:hover, .glyphs button:focus-visible { background: var(--paper); outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.glyphs .ch { font-family: var(--display); font-size: 36px; line-height: 1.35; }
+.glyphs .cp { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.glyph-tools { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+
+.note { color: var(--muted); font-size: 13.5px; max-width: 70ch; }
+footer { display: grid; gap: 6px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--grid); padding-top: 18px; }
+footer .files { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+footer a, .credit a { color: var(--accent); text-underline-offset: 3px; }
+.credit { font-size: 13.5px; color: var(--muted); }
+
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rule:nth-child(3) { border-left: 0; }
+  .rule:nth-child(n+3) { border-top: 1px solid var(--grid); }
+  .rule .g { font-size: 72px; height: 92px; }
+  .metrics .word { font-size: 150px; }
+}
+@media (prefers-reduced-motion: reduce) { .cell .lying { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="title">
+      <h1 id="title-word">Tangping</h1>
+      <span class="zh">躺平体</span>
+    </div>
+    <p class="lede">A display face where every Latin letter is a bold Hei hanzi lying on its side. Lay 曼 down, slice off its left edge, and it reads MAN. The whole alphabet is drawn on the same rules.</p>
+    <p class="credit">Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X).</p>
+    <div class="demo" aria-label="曼 rotated a quarter turn reads as MAN">
+      <div class="cell"><span class="han">曼</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="cell"><span class="han lying">曼</span></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="cell wide"><span class="latin">mAn</span></div>
+    </div>
+    <div class="demo-cap"><span>stand</span><span>·</span><span>lie down, cut</span><span>·</span><span>read</span></div>
+  </header>
+
+  <section class="tester" aria-labelledby="try-h">
+    <div class="section-head">
+      <span class="label">Type tester</span>
+      <h2 id="try-h">Try it</h2>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Style">
+        <button type="button" id="style-reg" aria-pressed="true">Regular</button>
+        <button type="button" id="style-even" aria-pressed="false">Even</button>
+      </div>
+      <label class="size" for="size">Size
+        <input type="range" id="size" min="28" max="220" value="96">
+        <output id="size-out" for="size">96px</output>
+      </label>
+    </div>
+    <div class="chips" id="chips">
+      <button type="button">mAn</button>
+      <button type="button">LIE FLAT. STAND TALL.</button>
+      <button type="button">turn · cut · read</button>
+      <button type="button">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</button>
+      <button type="button">¡OLÉ! ÇA VA? GRÜSSE</button>
+      <button type="button">「TANG PING」 躺平 → 2026</button>
+    </div>
+    <div class="stage">
+      <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">LIE FLAT. STAND TALL.</textarea>
+    </div>
+    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.</p>
+  </section>
+
+  <section aria-labelledby="rules-h" style="display:grid;gap:18px">
+    <div class="section-head">
+      <span class="label">How it is drawn</span>
+      <h2 id="rules-h">Four rules from one character</h2>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <div class="g">A</div>
+        <h3>Thick bars, thin stems</h3>
+        <p>Bars are Hei vertical strokes turned sideways, so they carry more weight than the stems.</p>
+        <span class="nums">bar 135 · stem 100</span>
+      </div>
+      <div class="rule">
+        <div class="g">m</div>
+        <h3>Cut at the baseline</h3>
+        <p>Every stem ends in a straight slice, where the character's left edge was cut away.</p>
+        <span class="nums">flat cut · y = 0</span>
+      </div>
+      <div class="rule">
+        <div class="g">n</div>
+        <h3>撇 down, 捺 up</h3>
+        <p>Strokes falling to the right taper like 撇. Strokes rising to the right sweep past the top like 捺.</p>
+        <span class="nums">tip +175 over stem</span>
+      </div>
+      <div class="rule">
+        <div class="g">Hh</div>
+        <h3>Two heights</h3>
+        <p>Tall and short forms come from wide and narrow parts of the source character.</p>
+        <span class="nums">689 · 527</span>
+      </div>
+    </div>
+    <div class="metrics" aria-label="Vertical metrics of mAn in font units">
+      <div class="metrics-inner" id="metrics">
+        <div class="word" id="metrics-word">mAn</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section aria-labelledby="src-h" style="display:grid;gap:14px">
+    <div class="section-head">
+      <span class="label">Source map</span>
+      <h2 id="src-h">Every letter is a real character, turned and cut</h2>
+    </div>
+    <p class="note">Each source was found by searching all 6,763 GB2312 characters in a bold Hei font: turn a quarter-turn, then cut straight across, at most half. The score compares the cut piece with the Tangping letter (1.00 is identical). Y has no clean source; 卡 is the closest. C, E, F, H, K, R and T were redrawn to follow their sources: 冂's hook, 山's long middle arm, 工's short left stroke, 刀's curved leg, 十's wide bar.</p>
+    <div class="legend"><span><i class="k1"></i>turned character</span><span><i class="k2"></i>kept piece</span><span><i class="k3"></i>cut</span></div>
+    <div class="sources" id="sources"></div>
+  </section>
+
+  <section aria-labelledby="glyphs-h" style="display:grid;gap:14px">
+    <div class="glyph-tools">
+      <div class="section-head">
+        <span class="label">Character set</span>
+        <h2 id="glyphs-h"><span id="glyph-count">0</span> glyphs</h2>
+      </div>
+      <span class="label">Tap a glyph to add it to the tester</span>
+    </div>
+    <div class="glyphs" id="glyphs"></div>
+  </section>
+
+  <footer>
+    <span class="files">Tangping-Regular.otf · Tangping-Even.otf · .woff2 for the web</span>
+    <span>Version 3.0. Basic Latin, Western European accents, Œ Š Ž Ÿ, punctuation, currency, arrows and 「」. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const CHARS = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¥¦§©«¬®°±¶·»¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿıŒœŠšŸŽž–—‘’‚“”„•…‹›€™←↑→↓−「」";
+  const sample = document.getElementById('sample');
+  const size = document.getElementById('size');
+  const sizeOut = document.getElementById('size-out');
+  const btnReg = document.getElementById('style-reg');
+  const btnEven = document.getElementById('style-even');
+  const note = document.getElementById('style-note');
+  const root = document.documentElement;
+
+  function fit() {
+    sample.style.height = 'auto';
+    sample.style.height = sample.scrollHeight + 'px';
+  }
+  function setSize(v) {
+    sample.style.setProperty('--size', v + 'px');
+    sample.parentElement.style.setProperty('--size', v + 'px');
+    sizeOut.textContent = v + 'px';
+    fit();
+  }
+  function setStyle(even) {
+    btnReg.setAttribute('aria-pressed', String(!even));
+    btnEven.setAttribute('aria-pressed', String(even));
+    root.style.setProperty('--display', (even ? '"Tangping Even"' : '"Tangping Regular"') + ', "Noto Sans SC", sans-serif');
+    note.textContent = even
+      ? 'Even: every capital is tall. Lowercase is still the short form, so case controls the bounce.'
+      : 'Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.';
+    requestAnimationFrame(fit);
+  }
+
+  const startSize = window.innerWidth < 520 ? 64 : 96;
+  size.value = startSize;
+  setSize(startSize);
+  size.addEventListener('input', () => setSize(size.value));
+  sample.addEventListener('input', fit);
+  btnReg.addEventListener('click', () => setStyle(false));
+  btnEven.addEventListener('click', () => setStyle(true));
+  document.getElementById('chips').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    sample.value = b.textContent; fit();
+  });
+
+  // glyph grid
+  const grid = document.getElementById('glyphs');
+  const frag = document.createDocumentFragment();
+  for (const ch of CHARS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const cp = ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+    b.setAttribute('aria-label', 'U+' + cp);
+    b.innerHTML = '<span class="ch"></span><span class="cp">' + cp + '</span>';
+    b.firstChild.textContent = ch;
+    b.addEventListener('click', () => { sample.value += ch; fit(); });
+    frag.appendChild(b);
+  }
+  grid.appendChild(frag);
+  document.getElementById('glyph-count').textContent = CHARS.length;
+
+
+  // source map
+  const SOURCES = [{"L": "A", "ch": "曼", "turn": "ccw", "cut": 44, "top": 0, "band": true, "w": 905, "h": 912, "full": "M564.0 858.0H658.0V717.0L674.0 750.0C710.0 711.0 741.0 667.0 768.0 616.0C785.0 709.0 795.0 809.0 800.0 912.0C827.0 894.0 875.0 874.0 905.0 867.0C894.0 721.0 874.0 579.0 836.0 455.0C873.0 339.0 895.0 208.0 905.0 67.0C875.0 52.0 827.0 24.0 802.0 0.0C796.0 103.0 786.0 202.0 770.0 292.0C727.0 214.0 673.0 149.0 604.0 102.0L558.0 178.0L564.0 200.0ZM0.0 796.0H292.0V127.0H0.0ZM324.0 867.0H529.0V55.0H324.0ZM180.0 683.0V245.0H218.0V683.0ZM74.0 683.0V245.0H110.0V683.0ZM658.0 308.0C686.0 350.0 710.0 400.0 729.0 458.0C709.0 517.0 686.0 569.0 658.0 611.0ZM400.0 292.0V174.0H453.0V292.0ZM400.0 525.0V408.0H453.0V525.0ZM400.0 755.0V640.0H453.0V755.0Z", "piece": "M529.0 510.7V55.0H324.0V510.7H400.0V408.0H453.0V510.7H529.0ZM400.0 292.0V174.0H453.0V292.0Z", "cuts": [["h", 510.7], ["v", 306.8], ["v", 541.2]], "score": 0.77}, {"L": "B", "ch": "巴", "turn": "cw", "cut": 0, "top": 0, "band": true, "w": 866, "h": 847, "full": "M866.0 0.0H211.0C41.0 0.0 0.0 57.0 0.0 252.0V604.0C0.0 777.0 56.0 825.0 224.0 847.0C231.0 812.0 252.0 757.0 270.0 726.0C144.0 710.0 119.0 691.0 119.0 592.0V249.0C119.0 138.0 132.0 124.0 211.0 124.0H416.0V623.0H364.0V748.0H866.0ZM533.0 433.0H748.0V623.0H533.0ZM533.0 312.0V124.0H748.0V312.0Z", "piece": "M866.0 0.0H433.0V748.0H866.0ZM533.0 433.0H748.0V623.0H533.0ZM533.0 312.0V124.0H748.0V312.0Z", "cuts": [["v", 433.0]], "score": 0.73}, {"L": "C", "ch": "冂", "turn": "ccw", "cut": 0, "top": 0, "band": false, "w": 880, "h": 831, "full": "M0.0 831.0H879.0V710.0H118.0V122.0H737.0C755.0 122.0 761.0 128.0 762.0 147.0C763.0 165.0 763.0 228.0 760.0 284.0C791.0 266.0 847.0 246.0 880.0 241.0C880.0 153.0 877.0 95.0 857.0 54.0C837.0 13.0 803.0 0.0 740.0 0.0H0.0Z", "piece": "M0.0 831.0H879.0V710.0H118.0V122.0H737.0C755.0 122.0 761.0 128.0 762.0 147.0C763.0 165.0 763.0 228.0 760.0 284.0C791.0 266.0 847.0 246.0 880.0 241.0C880.0 153.0 877.0 95.0 857.0 54.0C837.0 13.0 803.0 0.0 740.0 0.0H0.0Z", "cuts": [], "score": 0.79}, {"L": "D", "ch": "巳", "turn": "cw", "cut": 0, "top": 0, "band": true, "w": 853, "h": 843, "full": "M853.0 0.0H210.0C41.0 0.0 0.0 57.0 0.0 251.0V600.0C0.0 773.0 56.0 820.0 224.0 843.0C230.0 807.0 252.0 753.0 271.0 722.0C144.0 705.0 119.0 688.0 119.0 589.0V249.0C119.0 139.0 130.0 125.0 209.0 125.0H420.0V606.0H365.0V730.0H853.0ZM538.0 606.0V125.0H735.0V606.0Z", "piece": "M853.0 0.0H426.5V730.0H853.0ZM538.0 606.0V125.0H735.0V606.0Z", "cuts": [["v", 426.5]], "score": 0.88}, {"L": "E", "ch": "山", "turn": "cw", "cut": 0, "top": 0, "band": false, "w": 930, "h": 818, "full": "M721.0 0.0H71.0V693.0H0.0V818.0H725.0V693.0H195.0V469.0H930.0V343.0H195.0V124.0H721.0Z", "piece": "M721.0 0.0H71.0V693.0H0.0V818.0H725.0V693.0H195.0V469.0H930.0V343.0H195.0V124.0H721.0Z", "cuts": [], "score": 0.82}, {"L": "F", "ch": "岂", "turn": "cw", "cut": 25, "top": 0, "band": true, "w": 900, "h": 885, "full": "M352.0 25.0H151.0C30.0 25.0 0.0 85.0 0.0 289.0V657.0C0.0 823.0 32.0 865.0 170.0 885.0C175.0 851.0 191.0 801.0 208.0 772.0C119.0 761.0 104.0 746.0 104.0 652.0V286.0C104.0 165.0 112.0 144.0 154.0 144.0H249.0V788.0H558.0V0.0H454.0V669.0H352.0ZM856.0 11.0H630.0V812.0H856.0V691.0H728.0V461.0H900.0V345.0H728.0V126.0H856.0Z", "piece": "M856.0 11.0H630.0V663.8H728.0V461.0H900.0V345.0H728.0V126.0H856.0Z", "cuts": [["h", 663.8], ["v", 585.9]], "score": 0.88}, {"L": "G", "ch": "町", "turn": "ccw", "cut": 0, "top": 12, "band": true, "w": 855, "h": 906, "full": "M0.0 906.0H783.0V805.0H707.0V495.0H0.0ZM13.0 459.0H130.0V249.0H717.0C735.0 249.0 740.0 256.0 740.0 276.0C741.0 295.0 741.0 366.0 738.0 425.0C769.0 408.0 822.0 390.0 855.0 386.0C855.0 293.0 853.0 229.0 834.0 186.0C816.0 144.0 783.0 130.0 719.0 130.0H130.0V0.0H13.0ZM400.0 599.0H602.0V658.0H400.0ZM602.0 805.0H400.0V747.0H602.0ZM297.0 599.0V658.0H105.0V599.0ZM105.0 805.0V747.0H297.0V805.0Z", "piece": "M0.0 906.0H427.5V805.0H400.0V747.0H427.5V658.0H400.0V599.0H427.5V495.0H0.0ZM13.0 459.0H130.0V249.0H427.5V130.0H130.0V113.2H13.0ZM297.0 599.0V658.0H105.0V599.0ZM105.0 805.0V747.0H297.0V805.0Z", "cuts": [["h", 113.2], ["v", 427.5]], "score": 0.78}, {"L": "H", "ch": "工", "turn": "ccw", "cut": 0, "top": 0, "band": false, "w": 766, "h": 914, "full": "M645.0 914.0H766.0V0.0H645.0V394.0H126.0V56.0H0.0V859.0H126.0V531.0H645.0Z", "piece": "M645.0 914.0H766.0V0.0H645.0V394.0H126.0V56.0H0.0V859.0H126.0V531.0H645.0Z", "cuts": [], "score": 0.72}, {"L": "I", "ch": "日", "turn": "ccw", "cut": 0, "top": 0, "band": true, "w": 867, "h": 698, "full": "M0.0 698.0H867.0V575.0H801.0V129.0H865.0V0.0H0.0ZM454.0 575.0V129.0H680.0V575.0ZM336.0 575.0H121.0V129.0H336.0Z", "piece": "M454.0 575.0V129.0H650.2V0.0H216.8V129.0H336.0V575.0H216.8V698.0H650.2V575.0Z", "cuts": [["v", 216.8], ["v", 650.2]], "score": 0.9}, {"L": "J", "ch": "冖", "turn": "cw", "cut": 0, "top": 30, "band": false, "w": 295, "h": 850, "full": "M295.0 0.0H0.0V125.0H180.0V718.0H5.0V850.0H295.0Z", "piece": "M295.0 255.0H180.0V718.0H5.0V850.0H295.0V255.0Z", "cuts": [["h", 255.0]], "score": 0.82}, {"L": "K", "ch": "仄", "turn": "ccw", "cut": 25, "top": 0, "band": false, "w": 889, "h": 949, "full": "M0.0 858.0H307.0C461.0 858.0 680.0 865.0 828.0 949.0C839.0 919.0 870.0 865.0 889.0 842.0C729.0 752.0 476.0 737.0 307.0 737.0H115.0V22.0H0.0ZM143.0 439.0C367.0 449.0 645.0 456.0 789.0 748.0C813.0 717.0 853.0 683.0 883.0 665.0C801.0 511.0 683.0 426.0 554.0 378.0C701.0 312.0 815.0 216.0 882.0 78.0C851.0 61.0 805.0 26.0 782.0 0.0C712.0 169.0 558.0 276.0 373.0 333.0C295.0 321.0 217.0 316.0 143.0 312.0Z", "piece": "M143.0 439.0C357.3 448.6 621.1 455.4 769.6 711.8H822.6C842.5 693.1 864.6 676.0 883.0 665.0C801.0 511.0 683.0 426.0 554.0 378.0C701.0 312.0 815.0 216.0 882.0 78.0C851.0 61.0 805.0 26.0 782.0 0.0C712.0 169.0 558.0 276.0 373.0 333.0C295.0 321.0 217.0 316.0 143.0 312.0ZM0.0 711.8H115.0V22.0H0.0V711.8Z", "cuts": [["h", 711.8]], "score": 0.62}, {"L": "L", "ch": "冖", "turn": "ccw", "cut": 0, "top": 30, "band": false, "w": 295, "h": 850, "full": "M0.0 850.0H295.0V725.0H115.0V132.0H290.0V0.0H0.0Z", "piece": "M0.0 850.0H295.0V725.0H115.0V255.0H0.0Z", "cuts": [["h", 255.0]], "score": 0.93}, {"L": "M", "ch": "曼", "turn": "ccw", "cut": 44, "top": 0, "band": true, "w": 905, "h": 912, "full": "M564.0 858.0H658.0V717.0L674.0 750.0C710.0 711.0 741.0 667.0 768.0 616.0C785.0 709.0 795.0 809.0 800.0 912.0C827.0 894.0 875.0 874.0 905.0 867.0C894.0 721.0 874.0 579.0 836.0 455.0C873.0 339.0 895.0 208.0 905.0 67.0C875.0 52.0 827.0 24.0 802.0 0.0C796.0 103.0 786.0 202.0 770.0 292.0C727.0 214.0 673.0 149.0 604.0 102.0L558.0 178.0L564.0 200.0ZM0.0 796.0H292.0V127.0H0.0ZM324.0 867.0H529.0V55.0H324.0ZM180.0 683.0V245.0H218.0V683.0ZM74.0 683.0V245.0H110.0V683.0ZM658.0 308.0C686.0 350.0 710.0 400.0 729.0 458.0C709.0 517.0 686.0 569.0 658.0 611.0ZM400.0 292.0V174.0H453.0V292.0ZM400.0 525.0V408.0H453.0V525.0ZM400.0 755.0V640.0H453.0V755.0Z", "piece": "M0.0 510.7H74.0V245.0H110.0V510.7H180.0V245.0H218.0V510.7H292.0V127.0H0.0V510.7Z", "cuts": [["h", 510.7], ["v", 306.8]], "score": 0.88}, {"L": "N", "ch": "曼", "turn": "ccw", "cut": 44, "top": 0, "band": true, "w": 905, "h": 912, "full": "M564.0 858.0H658.0V717.0L674.0 750.0C710.0 711.0 741.0 667.0 768.0 616.0C785.0 709.0 795.0 809.0 800.0 912.0C827.0 894.0 875.0 874.0 905.0 867.0C894.0 721.0 874.0 579.0 836.0 455.0C873.0 339.0 895.0 208.0 905.0 67.0C875.0 52.0 827.0 24.0 802.0 0.0C796.0 103.0 786.0 202.0 770.0 292.0C727.0 214.0 673.0 149.0 604.0 102.0L558.0 178.0L564.0 200.0ZM0.0 796.0H292.0V127.0H0.0ZM324.0 867.0H529.0V55.0H324.0ZM180.0 683.0V245.0H218.0V683.0ZM74.0 683.0V245.0H110.0V683.0ZM658.0 308.0C686.0 350.0 710.0 400.0 729.0 458.0C709.0 517.0 686.0 569.0 658.0 611.0ZM400.0 292.0V174.0H453.0V292.0ZM400.0 525.0V408.0H453.0V525.0ZM400.0 755.0V640.0H453.0V755.0Z", "piece": "M658.0 308.0C686.0 350.0 710.0 400.0 729.0 458.0C722.8 476.3 716.3 493.9 709.5 510.7H851.6C846.8 491.8 841.6 473.2 836.0 455.0C873.0 339.0 895.0 208.0 905.0 67.0C875.0 52.0 827.0 24.0 802.0 0.0C796.0 103.0 786.0 202.0 770.0 292.0C727.0 214.0 673.0 149.0 604.0 102.0L558.0 178.0L564.0 200.0V510.7H658.0Z", "cuts": [["h", 510.7], ["v", 541.2]], "score": 0.76}, {"L": "O", "ch": "口", "turn": "ccw", "cut": 0, "top": 0, "band": false, "w": 822, "h": 790, "full": "M0.0 790.0H822.0V665.0H740.0V131.0H820.0V0.0H0.0ZM617.0 665.0H122.0V131.0H617.0Z", "piece": "M0.0 790.0H822.0V665.0H740.0V131.0H820.0V0.0H0.0ZM617.0 665.0H122.0V131.0H617.0Z", "cuts": [], "score": 0.75}, {"L": "P", "ch": "节", "turn": "ccw", "cut": 0, "top": 0, "band": true, "w": 937, "h": 903, "full": "M358.0 857.0H474.0V621.0H937.0V493.0H474.0V206.0H674.0C688.0 206.0 691.0 212.0 692.0 231.0C692.0 250.0 692.0 322.0 689.0 380.0C725.0 364.0 779.0 349.0 816.0 345.0C816.0 252.0 816.0 186.0 797.0 140.0C778.0 92.0 741.0 80.0 677.0 80.0H358.0ZM0.0 336.0H99.0V564.0H0.0V687.0H99.0V903.0H214.0V687.0H310.0V564.0H214.0V336.0H310.0V209.0H214.0V0.0H99.0V209.0H0.0Z", "piece": "M358.0 857.0H474.0V621.0H819.9V493.0H474.0V206.0H674.0C688.0 206.0 691.0 212.0 692.0 231.0C692.0 250.0 692.0 322.0 689.0 380.0C725.0 364.0 779.0 349.0 816.0 345.0C816.0 252.0 816.0 186.0 797.0 140.0C778.0 92.0 741.0 80.0 677.0 80.0H358.0Z", "cuts": [["v", 351.4], ["v", 819.9]], "score": 0.83}, {"L": "Q", "ch": "坦", "turn": "ccw", "cut": 25, "top": 0, "band": true, "w": 888, "h": 948, "full": "M27.0 546.0H681.0V68.0H27.0ZM647.0 948.0 769.0 908.0C736.0 815.0 694.0 697.0 652.0 588.0L540.0 608.0L571.0 702.0H332.0V613.0H219.0V702.0H0.0V816.0H219.0V926.0H332.0V816.0H608.0C623.0 865.0 637.0 911.0 647.0 948.0ZM773.0 677.0H888.0V0.0H773.0ZM408.0 190.0H569.0V431.0H408.0ZM140.0 431.0V190.0H297.0V431.0Z", "piece": "M333.0 68.0V546.0H681.0V68.0H333.0ZM408.0 190.0H569.0V431.0H408.0ZM333.0 711.0H698.2C683.1 669.9 667.5 628.3 652.0 588.0L540.0 608.0L571.0 702.0H333.0ZM773.0 677.0H777.0V0.0H773.0Z", "cuts": [["h", 711.0], ["v", 333.0], ["v", 777.0]], "score": 0.71}, {"L": "R", "ch": "召", "turn": "ccw", "cut": 12, "top": 0, "band": true, "w": 883, "h": 857, "full": "M0.0 788.0H111.0V520.0C216.0 553.0 318.0 625.0 376.0 857.0C402.0 831.0 450.0 800.0 480.0 789.0C473.0 765.0 466.0 743.0 458.0 722.0H883.0V599.0H844.0V161.0H882.0V32.0H452.0V705.0C371.0 497.0 246.0 422.0 111.0 385.0V131.0C229.0 141.0 283.0 153.0 298.0 170.0C308.0 181.0 310.0 192.0 310.0 211.0C310.0 234.0 309.0 287.0 304.0 341.0C335.0 321.0 382.0 306.0 415.0 305.0C418.0 246.0 417.0 188.0 414.0 155.0C410.0 118.0 401.0 91.0 374.0 66.0C340.0 34.0 251.0 18.0 47.0 3.0C33.0 1.0 0.0 0.0 0.0 0.0ZM736.0 599.0H560.0V161.0H736.0Z", "piece": "M0.0 749.9H111.0V520.0C197.7 547.3 282.4 601.1 342.0 749.9H441.5V679.3C360.4 490.7 240.3 420.4 111.0 385.0V131.0C229.0 141.0 283.0 153.0 298.0 170.0C308.0 181.0 310.0 192.0 310.0 211.0C310.0 234.0 309.0 287.0 304.0 341.0C335.0 321.0 382.0 306.0 415.0 305.0C418.0 246.0 417.0 188.0 414.0 155.0C410.0 118.0 401.0 91.0 374.0 66.0C340.0 34.0 251.0 18.0 47.0 3.0C33.0 1.0 0.0 0.0 0.0 0.0V749.9Z", "cuts": [["h", 749.9], ["v", 441.5]], "score": 0.82}, {"L": "S", "ch": "凹", "turn": "ccw", "cut": 25, "top": 0, "band": true, "w": 826, "h": 823, "full": "M0.0 360.0H342.0V466.0H0.0V823.0H826.0V710.0H758.0V120.0H822.0V0.0H0.0ZM454.0 584.0V247.0H114.0V120.0H645.0V710.0H114.0V584.0H454.0Z", "piece": "M0.0 360.0H342.0V466.0H0.0V617.2H114.0V584.0H413.0V247.0H114.0V120.0H413.0V0.0H0.0Z", "cuts": [["h", 617.2], ["v", 413.0]], "score": 0.82}, {"L": "T", "ch": "十", "turn": "ccw", "cut": 0, "top": 50, "band": false, "w": 939, "h": 911, "full": "M0.0 524.0H360.0V911.0H485.0V524.0H939.0V393.0H485.0V0.0H360.0V393.0H0.0Z", "piece": "M0.0 524.0H360.0V911.0H485.0V524.0H939.0V455.5H0.0Z", "cuts": [["h", 455.5]], "score": 0.86}, {"L": "U", "ch": "口", "turn": "ccw", "cut": 0, "top": 25, "band": false, "w": 822, "h": 790, "full": "M0.0 790.0H822.0V665.0H740.0V131.0H820.0V0.0H0.0ZM617.0 665.0H122.0V131.0H617.0Z", "piece": "M0.0 790.0H822.0V665.0H740.0V197.5H617.0V665.0H122.0V197.5H0.0Z", "cuts": [["h", 197.5]], "score": 0.73}, {"L": "V", "ch": "之", "turn": "ccw", "cut": 12, "top": 12, "band": true, "w": 949, "h": 931, "full": "M705.0 723.0C705.0 780.0 759.0 859.0 836.0 931.0L949.0 844.0C885.0 803.0 818.0 758.0 818.0 726.0C818.0 705.0 851.0 671.0 878.0 628.0C919.0 559.0 932.0 480.0 932.0 356.0C932.0 256.0 926.0 105.0 921.0 34.0C889.0 32.0 826.0 12.0 794.0 0.0C808.0 96.0 817.0 249.0 817.0 351.0C817.0 457.0 810.0 541.0 772.0 604.0C639.0 402.0 440.0 194.0 252.0 68.0L192.0 160.0L198.0 183.0V419.0L163.0 357.0C120.0 381.0 50.0 433.0 0.0 471.0L58.0 579.0C100.0 550.0 155.0 512.0 198.0 488.0V880.0H316.0V274.0C452.0 382.0 606.0 553.0 706.0 717.0Z", "piece": "M705.0 723.0C705.0 749.7 716.9 781.2 737.4 814.6H904.3C857.2 782.5 818.0 750.5 818.0 726.0C818.0 705.0 851.0 671.0 878.0 628.0C919.0 559.0 932.0 480.0 932.0 356.0C932.0 286.1 929.1 191.4 925.6 116.4H806.6C813.2 196.3 817.0 284.5 817.0 351.0C817.0 457.0 810.0 541.0 772.0 604.0C691.4 481.5 586.5 356.9 474.5 249.6V420.2C561.0 510.6 643.9 615.2 706.0 717.0Z", "cuts": [["h", 814.6], ["h", 116.4], ["v", 474.5]], "score": 0.74}, {"L": "W", "ch": "日", "turn": "ccw", "cut": 0, "top": 20, "band": false, "w": 867, "h": 698, "full": "M0.0 698.0H867.0V575.0H801.0V129.0H865.0V0.0H0.0ZM454.0 575.0V129.0H680.0V575.0ZM336.0 575.0H121.0V129.0H336.0Z", "piece": "M0.0 698.0H867.0V575.0H801.0V139.6H680.0V575.0H454.0V139.6H336.0V575.0H121.0V139.6H0.0Z", "cuts": [["h", 139.6]], "score": 0.79}, {"L": "X", "ch": "艾", "turn": "ccw", "cut": 25, "top": 0, "band": true, "w": 937, "h": 929, "full": "M350.0 654.0 380.0 763.0C516.0 715.0 626.0 651.0 712.0 563.0C765.0 663.0 800.0 784.0 822.0 929.0C851.0 907.0 907.0 875.0 937.0 863.0C905.0 706.0 859.0 574.0 792.0 464.0C860.0 362.0 905.0 234.0 931.0 73.0C898.0 57.0 846.0 25.0 819.0 0.0C800.0 144.0 765.0 262.0 713.0 358.0C628.0 263.0 519.0 192.0 376.0 143.0L344.0 269.0C473.0 308.0 570.0 371.0 644.0 460.0C568.0 551.0 471.0 613.0 350.0 654.0ZM0.0 351.0H99.0V572.0H0.0V691.0H99.0V902.0H215.0V691.0H328.0V572.0H215.0V351.0H328.0V232.0H215.0V17.0H99.0V232.0H0.0Z", "piece": "M468.5 696.8H531.7C600.7 659.6 660.6 615.6 712.0 563.0C733.7 604.0 752.4 648.5 768.4 696.8H894.7C867.5 610.1 833.9 532.7 792.0 464.0C860.0 362.0 905.0 234.0 931.0 73.0C898.0 57.0 846.0 25.0 819.0 0.0C800.0 144.0 765.0 262.0 713.0 358.0C647.4 284.6 567.4 225.6 468.5 179.9V319.1C538.3 355.5 596.0 402.3 644.0 460.0C594.6 519.1 536.4 566.0 468.5 602.8Z", "cuts": [["h", 696.8], ["v", 468.5]], "score": 0.78}, {"L": "Y", "ch": "卡", "turn": "ccw", "cut": 0, "top": 25, "band": true, "w": 939, "h": 911, "full": "M0.0 548.0H354.0V911.0H473.0V543.0H939.0V415.0H654.0C697.0 313.0 759.0 174.0 796.0 106.0L688.0 38.0C650.0 117.0 589.0 274.0 552.0 373.0L614.0 415.0H473.0V0.0H354.0V421.0H234.0V96.0H119.0V421.0H0.0Z", "piece": "M354.0 227.8V421.0H234.8V548.0H354.0V911.0H473.0V543.0H704.2V415.0H654.0C669.1 379.3 686.4 339.1 704.2 298.9V227.8H607.8C587.3 279.7 567.5 331.4 552.0 373.0L614.0 415.0H473.0V227.8H354.0Z", "cuts": [["h", 227.8], ["v", 234.8], ["v", 704.2]], "score": 0.58}, {"L": "Z", "ch": "以", "turn": "ccw", "cut": 0, "top": 0, "band": true, "w": 901, "h": 912, "full": "M0.0 240.0C424.0 255.0 673.0 326.0 796.0 627.0C821.0 599.0 876.0 551.0 901.0 535.0C845.0 420.0 773.0 336.0 681.0 274.0C754.0 207.0 835.0 140.0 892.0 106.0L813.0 0.0C745.0 45.0 650.0 136.0 571.0 214.0C425.0 151.0 240.0 123.0 6.0 111.0ZM814.0 846.0C786.0 817.0 756.0 771.0 604.0 485.0C577.0 495.0 525.0 510.0 490.0 516.0L586.0 706.0H26.0V838.0H603.0C657.0 838.0 699.0 884.0 718.0 912.0C738.0 891.0 786.0 857.0 814.0 846.0ZM117.0 623.0C189.0 567.0 291.0 505.0 355.0 480.0L289.0 370.0C225.0 400.0 131.0 462.0 61.0 520.0Z", "piece": "M0.0 240.0C180.7 246.4 329.6 263.0 450.5 303.1V172.0C326.6 137.7 179.8 119.9 6.0 111.0ZM450.5 838.0V706.0H26.0V838.0H450.5ZM117.0 623.0C189.0 567.0 291.0 505.0 355.0 480.0L289.0 370.0C225.0 400.0 131.0 462.0 61.0 520.0Z", "cuts": [["v", 450.5]], "score": 0.77}];
+  const box = document.getElementById('sources');
+  const NS = 'http://www.w3.org/2000/svg';
+  for (const s of SOURCES) {
+    const card = document.createElement('div');
+    card.className = 'src' + (s.L === 'Y' ? ' weak' : '');
+    const turn = s.turn === 'ccw' ? '↺ 90°' : '↻ 90°';
+    const cut = [s.cut ? 'cut ' + s.cut + '%' : '', s.top ? 'top ' + s.top + '%' : '', s.band ? 'one part' : ''].filter(Boolean).join(' · ') || 'no cut';
+    card.innerHTML = '<div class="src-top"><span class="src-han"></span><span class="src-how"></span></div>' +
+      '<svg viewBox="0 0 ' + s.w + ' ' + s.h + '" preserveAspectRatio="xMidYMax meet" role="img"></svg>' +
+      '<div class="src-bot"><span class="src-letter"></span><span class="src-score"></span></div>';
+    card.querySelector('.src-han').textContent = s.ch;
+    card.querySelector('.src-how').innerHTML = turn + '<br>' + cut;
+    card.querySelector('.src-letter').textContent = s.L;
+    card.querySelector('.src-score').textContent = (s.L === 'Y' ? 'closest ' : '') + s.score.toFixed(2);
+    const svg = card.querySelector('svg');
+    svg.setAttribute('aria-label', s.ch + ' turned ' + (s.turn === 'ccw' ? 'counter-clockwise' : 'clockwise') + ' and cut, reads ' + s.L);
+    const full = document.createElementNS(NS, 'path'); full.setAttribute('d', s.full); full.setAttribute('class', 'full');
+    const piece = document.createElementNS(NS, 'path'); piece.setAttribute('d', s.piece); piece.setAttribute('class', 'piece');
+    svg.append(full, piece);
+    for (const [dir, v] of s.cuts) {
+      const ln = document.createElementNS(NS, 'line'); ln.setAttribute('class', 'cutline');
+      if (dir === 'h') { ln.setAttribute('x1', -40); ln.setAttribute('x2', s.w + 40); ln.setAttribute('y1', v); ln.setAttribute('y2', v); }
+      else { ln.setAttribute('y1', -40); ln.setAttribute('y2', s.h + 40); ln.setAttribute('x1', v); ln.setAttribute('x2', v); }
+      svg.append(ln);
+    }
+    box.appendChild(card);
+  }
+
+  // metrics guides: measure the real baseline, then place lines in font units
+  function drawGuides() {
+    const box = document.getElementById('metrics');
+    const word = document.getElementById('metrics-word');
+    box.querySelectorAll('.guide').forEach(g => g.remove());
+    const probe = document.createElement('span');
+    probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+    word.appendChild(probe);
+    const fs = parseFloat(getComputedStyle(word).fontSize);
+    const base = probe.offsetTop + word.offsetTop;
+    probe.remove();
+    [[0, 'baseline 0'], [527, 'short 527'], [689, 'tall 689'], [774, 'tip 774']].forEach(([u, name]) => {
+      const g = document.createElement('div');
+      g.className = 'guide' + (u === 0 ? ' base' : '');
+      g.style.top = (base - u / 1000 * fs) + 'px';
+      g.innerHTML = '<span></span>';
+      g.firstChild.textContent = name;
+      box.appendChild(g);
+    });
+  }
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { drawGuides(); fit(); });
+  window.addEventListener('resize', () => { drawGuides(); fit(); });
+})();
+</script>
+
+</body>
+</html>
