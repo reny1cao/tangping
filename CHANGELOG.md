@@ -3,11 +3,11 @@
 ## 4.100 — 2026-10-22
 Fixes from an independent review of 4.000.
 - **Counters:** accented letters built on a letter with Hei turns (á é ğ Ď Ř æ œ Ð đ …) had their counters filled in. Fixed, and the build now refuses any accented letter with fewer counters than its base.
-- **Sentence case in Regular:** M N V W X Y Z stay short in all-caps (MAN, NASA) but stand tall before lowercase (`calt`), so "Mozart", "Wien" and "Zürich" no longer read as lowercase.
-- **Glyphs that read wrong:** opening quotes are now the closing quotes turned 180°; a new & built from a loop, a 撇 and a 捺 (no longer "Et"); ß and ẞ with an open lower turn; § as hook, ring, hook; £ with an f-like turn; ð with a hooked ascender, distinct from đ; Þ with P's bowl; ¿ is ? turned.
-- **Accents:** cedilla joined to its stem; side carons on ď ľ Ľ ť clear of the stem, with their own spacing; a larger ring; a wave tilde; Y X V and lowercase v x anchors moved clear of the rising 捺; ASCII grave at the height of the other marks; square i/j dots.
+- **Sentence case in Regular:** M N V W X Y Z stay short next to another capital (MAN, NASA) and stand tall everywhere else (`calt`), so "Mozart", "Zürich", "X-ray" and "V8" no longer read as lowercase.
+- **Glyphs that read wrong:** opening quotes are now the closing quotes turned 180°; a new & built from a loop, a 撇 and a 捺 (no longer "Et"); ß with a descender and ẞ with a falling stroke, both with an open lower turn; § as hook, ring, hook; £ with an f-like turn; ð with a 撇 ascender leaning back and a bar, distinct from đ; a wave ~; Þ with P's bowl; ¿ is ? turned.
+- **Accents:** narrower circumflex, caron, tilde, breve, macron and dieresis on lowercase, and accent-against-accent kerning capped at 40 units, so Czech and Slovak words (nejvyšší, příliš, ďalší) no longer break apart; cedilla joined to its stem; side carons on ď ľ Ľ ť clear of the stem, with their own spacing; a larger ring; a wave tilde; Y X V and lowercase v x anchors moved clear of the rising 捺; ASCII grave at the height of the other marks; square i/j dots.
 - **Kerning:** closest approach is now measured with 20 units of vertical slack, so a hyphen no longer slides over J's spur or z's foot; braces are kerned like brackets.
-- **Shapes:** tighter Hei turns (radius 95, was 130); bar-end flares 3 units, flush with the stems as in the reference; heavier lowercase bars (126) with larger a and e counters; S terminals pulled in (not 5); a smaller waist step on 8; clean joints on K, k, Y and R.
+- **Shapes:** tighter Hei turns (radius 95, was 130); bar-end flares 3 units, flush with the stems as in the reference; heavier lowercase bars (126 outer, 100 inner) with larger a and e counters; the build also refuses pinhole counters (the & foot is solid); S terminals pulled in (not 5); a smaller waist step on 8; clean joints on K, k, Y and R.
 
 ## 4.000 — 2026-10-22
 A redesign, because the alphabet did not live up to the original MAN.

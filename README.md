@@ -47,14 +47,14 @@ We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quart
 
 | Style | Capitals | Lowercase |
 |---|---|---|
-| **Tangping Regular** | M N V W X Y Z sit short in all-caps, as in the original MAN, and stand tall before lowercase | short, with ascenders and descenders |
+| **Tangping Regular** | M N V W X Y Z sit short next to another capital, as in the original MAN, and stand tall elsewhere | short, with ascenders and descenders |
 | **Tangping Even** | every capital is tall | short, with ascenders and descenders |
 
 Lowercase is drawn in the capitals' stroke weights and stands on the short height, the height of M and N in the original, so **case controls the bounce**. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of M N V W X Y Z in either style.
 
 **Character set:** the full Google Fonts *Latin Core* set (319 characters): Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian and Esperanto, plus ẞ Ł Ħ Ŧ, ordinals, punctuation, € £ ¥ ¢, © ® ™, arrows and 「 」. 380 glyphs in all.
 
-**OpenType:** class kerning (`kern`), accents positioned on any letter (`mark`, `mkmk`), dotless i and j under accents (`ccmp`), tall capitals before lowercase in Regular (`calt`), tall/short capitals (`ss01`). Figures are tabular. The fonts are hinted.
+**OpenType:** class kerning (`kern`), accents positioned on any letter (`mark`, `mkmk`), dotless i and j under accents (`ccmp`), short capitals only inside all-caps in Regular (`calt`), tall/short capitals (`ss01`). Figures are tabular. The fonts are hinted.
 
 ## Use
 

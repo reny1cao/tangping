@@ -44,8 +44,9 @@ ChangeLog
 
 22 October 2026 (The Tangping Project Authors) Tangping v4.100
 - Fixes from an independent review: filled counters in accented letters (now
-  checked at build time); tall M N V W X Y Z before lowercase in Regular (calt);
-  new quotes, &, ß ẞ § £ ð Þ ¿; accent placement; kerning; tighter Hei turns.
+  checked at build time); short M N V W X Y Z only inside all-caps in Regular
+  (calt); new quotes, &, ß ẞ § £ ð Þ ¿ ~; narrower lowercase accents so Czech and
+  Slovak words stay whole; kerning; tighter Hei turns.
 
 22 October 2026 (The Tangping Project Authors) Tangping v4.000
 - Redesign: Hei turns replace chamfers, notches and hooks; a real lowercase with

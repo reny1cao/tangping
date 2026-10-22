@@ -514,7 +514,7 @@ def _Z(h):
 
 # ================================================================ lowercase (x-height 527, ascenders 689, descenders -190)
 XH, ASC, DSC = LOW, TALL, DESC
-LB, LI = 126, 92                      # lowercase outer and inner bars
+LB, LI = 126, 100                     # lowercase outer and inner bars
 LC_ = {}
 
 
@@ -1194,11 +1194,7 @@ def _circ():
 
 
 @sym("asciitilde", "~", 400)
-def _tilde():
-    s = Shape()
-    rect(s, 0, 260, 110, 400); rect(s, 0, 300, 220, 400)
-    rect(s, 180, 210, 400, 310); rect(s, 290, 210, 400, 350)
-    return s
+def _tilde(): return acc_tilde(Shape(), 200, 230, w=200, a=55, t=100)
 
 
 @sym("grave", "`", 200)
@@ -1246,6 +1242,7 @@ def _amp():           # a small loop; a 撇 falls from it across the bowl; a 捺
     bbar(s, 0, 300, fl=False, fr=False)
     bend(s, 0, 0, -1, -1)
     na(s, 262, 0, 430, 400, wb=110, wt=105, tipdrop=45)
+    rect(s, 290, 0, 390, 125)                 # the foot where the 撇 and 捺 meet is solid
     return s
 
 
@@ -1431,9 +1428,9 @@ def acc_ring(s, cx, y):              # a small 口 with an open counter
     return s
 
 
-def acc_tilde(s, cx, y):             # one wave: up, down, up, as a band of even vertical thickness
+def acc_tilde(s, cx, y, w=160, a=40, t=84):   # one wave: up, down, up, as a band of even thickness
     import math
-    n, w, a, t = 24, 160, 40, 84
+    n = 24
     mid = [(cx - w + 2 * w * i / n, y + t / 2 + a + a * math.sin(math.pi * (-0.25 + 2.5 * i / n)))
            for i in range(n + 1)]
     return s.poly(*([(x, yy + t / 2) for x, yy in mid] + [(x, yy - t / 2) for x, yy in reversed(mid)]))
@@ -1535,11 +1532,22 @@ def letter_record(ch, h, lower):
     return shape, w, h, anchors
 
 
+NARROW_LC = {"circumflex", "caron", "tilde", "breve", "macron", "hungarumlaut"}
+
+
 def with_mark(shape, mark, anchors, h, ch_base):
     s = Shape().add(shape)
     if mark in TOP_MARKS:
         x, y = anchors["top"]
-        TOP_MARKS[mark](s, x, y - 60 + GAP.get(mark, 60))
+        y = y - 60 + GAP.get(mark, 60)
+        m = Shape()
+        if mark == "dieresis" and ch_base.islower():           # closer dots over narrow letters
+            sq(m, x - 128, y, 100); sq(m, x + 28, y, 100)
+        else:
+            TOP_MARKS[mark](m, x, y)
+            if ch_base.islower() and mark in NARROW_LC:       # lowercase marks are narrower, so
+                m = m.transformed(0.72, 1, x * 0.28, 0)       # neighbouring accents never collide
+        s.add(m)
     elif mark in BOTTOM_MARKS:
         BOTTOM_MARKS[mark](s, anchors["bottom"][0])
     elif mark == "ogonek":
@@ -1651,9 +1659,12 @@ def collect(style):
     special("Ð", eth, W2 + 80); special("Đ", Shape().add(eth), W2 + 80)
     d_bar = Shape().add(_ld()); xbar(d_bar, 130, 400, 575, 90)
     special("đ", d_bar, 400)
-    eth_l = Shape().add(_ld()); tbar(eth_l, 90, 320, ASC, t=110, fl=False, fr=False)
-    bend(eth_l, 320, ASC, 1, 1, tb=110)
-    special("ð", eth_l, 320)
+    eth_l = box(Shape(), 0, 0, 320, XH, tb=LB)
+    bend(eth_l, 0, XH, -1, 1, tb=LB); bend(eth_l, 0, 0, -1, -1, tb=LB)
+    eth_l = Shape().add(eth_l)
+    pie_c(eth_l, 90, ASC, 220, XH - 20, wt=115, wb=100, bow=0.04)    # the ascender leans back
+    xbar(eth_l, 60, 330, 572, 85)
+    special("ð", eth_l, 330)
     thorn = Shape(); t = 122; stem(thorn, 0, 0, TALL)
     lo, hi = round(TALL * 0.15), round(TALL * 0.76)
     xbar(thorn, 0, W2, lo, t); xbar(thorn, 0, W2, hi - t, t); stem(thorn, 240, lo, hi)
@@ -1675,7 +1686,7 @@ def collect(style):
     tb_ = _lt(); xbar(tb_, 0, 270, 250, 90)
     special("ŧ", tb_, 270, space_key="t")
     s = Shape(); mid = 300                                        # ß: an upper turn, then an open 3
-    stem(s, 0, 0, ASC); tbar(s, 0, 290, ASC, t=LB, fr=False); stem(s, 190, mid + LI - 1, ASC - LB + 1)
+    stem(s, 0, DSC, ASC); tbar(s, 0, 290, ASC, t=LB, fr=False); stem(s, 190, mid + LI - 1, ASC - LB + 1)
     xbar(s, 150, 320, mid, LI); stem(s, 220, LB - 1, mid + 1); bbar(s, 150, 320, t=LB, fr=False)
     bend(s, 290, ASC, 1, 1, tb=LB); bend(s, 320, mid + LI, 1, 1, tb=LI); bend(s, 320, 0, 1, -1, tb=LB)
     G.append(Glyph("germandbls", "ß", s, "letter", 320, LOW))
@@ -1952,6 +1963,8 @@ def auto_kerning(glyphs, paths, adv, min_gap=45):
                 k = max(-0.6 * slack, -170)
             elif raw_min < min_gap:                            # would touch (accents, tips): open up
                 k = min_gap - raw_min
+                if a.endswith("_m") or b.endswith("_m"):        # accent against accent: a little air,
+                    k = min(k, 40)                              # never a word gap
             else:
                 k = 0.0
             k = int(round(k / 10.0) * 10)
@@ -2000,13 +2013,14 @@ def features(glyphs, by_key, pairs, anchors, style):
         out.append(f"  sub {a[:-5]} by {a};")
     out.append("} ss01;")
     if style == "Regular":
-        # the short capitals belong to all-caps setting (MAN); before lowercase they stand tall,
-        # so sentence case never reads as lowercase
-        lower = sorted({g.name for g in glyphs if g.kind == "letter" and g.unis and g.unis[0].islower()})
+        # the short capitals belong to all-caps setting (MAN): next to another capital they stay
+        # short, anywhere else (Mozart, X-ray, V8) they stand tall, so they never read as lowercase
+        upper = sorted({g.name for g in glyphs if g.kind == "letter" and g.unis and g.unis[0].isupper()} | set(alts))
         shorts = [a[:-5] for a in alts]
-        out.append(f"@LOWER = [{' '.join(lower)}];")
+        out.append(f"@UPPER = [{' '.join(upper)}];")
         out.append(f"@SHORTCAP = [{' '.join(shorts)}];\n@TALLCAP = [{' '.join(alts)}];")
-        out.append("feature calt {\n  lookupflag IgnoreMarks;\n  sub @SHORTCAP' @LOWER by @TALLCAP;\n} calt;")
+        out.append("feature calt {\n  lookupflag IgnoreMarks;\n  ignore sub @UPPER @SHORTCAP';\n"
+                   "  ignore sub @SHORTCAP' @UPPER;\n  sub @SHORTCAP' by @TALLCAP;\n} calt;")
     return "\n".join(out)
 
 
@@ -2028,6 +2042,11 @@ def holes(path):
 def build(style, out):
     glyphs = collect(style)
     paths0 = {g.name: resolve(g.shape) for g in glyphs}
+    for g in glyphs:                    # no pinhole counters where strokes meet
+        for segs in _contours(paths0[g.name]):
+            a = sum(P[0][0] * P[-1][1] - P[-1][0] * P[0][1] for _, P in segs) / 2
+            if abs(a) < 2000:
+                raise ValueError(f"{g.name} has a tiny contour ({abs(a):.0f} square units)")
     for g in glyphs:                    # an accent must never fill a counter of its base letter
         b = getattr(g, "base", None)
         if b and holes(paths0[g.name]) < holes(paths0[b]):
