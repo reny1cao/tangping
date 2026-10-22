@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.000 — 2026-10-22
+A redesign, because the alphabet did not live up to the original MAN.
+- **Hei turns instead of gimmicks.** Where a Latin letter is round, its corners bend the way 九, 己 and 乚 bend in a bold Hei font: B C D G J P R S U, 0 2 3 5 6 8 9, the lowercase bowls, ( ) { } ? @ € § © ®. O stays a square 口. The 45° chamfers (D, 5, ẞ), the dotted zero, the notched H, and the hooks on C and R are gone; D, O and 0, B and 8, and S, 5 and 2 are now told apart by their turns.
+- **A real lowercase.** Same stroke weights as the capitals, standing on the short height (527) with ascenders (689) and descenders (−190): squared a e g s y, b d h k l t f with ascenders, g j p q y with descenders, ß as two stacked turns. Previously lowercase was a shrunken, lighter copy of the capitals.
+- **Diagonals** in X, Y, Z and 7 are tapering, slightly bowed 撇 strokes; R gets P's bowl and a curved 撇 leg; Q a 撇 foot below the corner.
+- **Sources:** E is now the 山 inside 端, K the 不 inside 否, U the 口 inside 烹 (mean match 0.76). New `research/fixed.py` repeats the search at the exact scale of the original cut.
+- M, A and N are unchanged: typing **MAN** in Regular still reproduces the original.
+
 ## 3.200 — 2026-10-22
 Fixes from the design audit (`scripts/audit.py`).
 - **Legibility:** D gets cut corners (not O), 8 a narrower top bowl (not B), 5 a cut bowl (not S), 6 and 9 open terminals, 1 a 撇 flag (not I), 0 a dot (not O), Q a longer tail.

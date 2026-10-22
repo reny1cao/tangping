@@ -6,15 +6,18 @@
 
 Latin letters drawn as bold Hei hanzi lying on their side (曼 turned a quarter-turn and cut reads MAN).
 Rules, measured from the original 曼 → MAN image (1px ≈ 4.5 units):
-  * stems (Hei horizontals turned upright) = 100 units, bars (Hei verticals turned flat) = 135
+  * stems (Hei horizontals turned upright) = 100 units, bars (Hei verticals turned flat) = 135;
+    inner bars are lighter (~112), as the reference A's crossbar is
   * every stem is cut flat at the baseline
   * exposed long edges of bars are slightly concave and flare at the corners
   * strokes falling to the right are 撇: tapering, flat-cut
   * strokes rising to the right are 捺: sweeping past the top, angled tip
+  * where a Latin letter is round, its corner bends like a Hei turn (横折弯, 竖弯 as in 九 己 乚);
+    where it is square, the corner stays square (O is 口)
   * condensed: two-stem letters are 340 wide with a 140 counter
-  * two heights: tall 689 and short 527; lowercase is the short form of every letter
-      Regular: the capitals M N V W X Y Z sit short too, as in the original MAN
-      Even:    every capital is tall
+  * two heights: tall 689 and short 527
+      capitals stand tall; Regular sets M N V W X Y Z short, as in the original MAN
+      lowercase stands on the short height, with ascenders to 689 and descenders to -190
 
 Usage:  python3 sources/build.py            # writes fonts/otf and fonts/webfonts
 """
@@ -23,7 +26,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
-VERSION = "3.200"
+VERSION = "4.000"
 COPYRIGHT = "Copyright 2026 The Tangping Project Authors (https://github.com/reny1cao/tangping)"
 DESIGNER = "Rocco × Claude"
 PROJECT_URL = "https://github.com/reny1cao/tangping"
@@ -33,7 +36,8 @@ TALL, LOW = 689, 527
 SB = 43
 W2 = 2 * S + C                 # 340
 LOWCAPS = set("MNVWXYZ")       # capitals that sit low in Regular
-DESC = -200
+DESC = -190
+RO, RI = 130, 40               # Hei turn radii (outer, counter)
 
 
 def bi(h):
@@ -46,7 +50,7 @@ def bi(h):
 class Shape:
     def __init__(self):
         self.contours = []
-        self.cuts = []          # contours subtracted after the union (chamfers, notches)
+        self.cuts = []          # contours subtracted after the union (Hei turns)
 
     def cut(self, *pts):
         self.cuts.append([("M", pts[0])] + [("L", p) for p in pts[1:]])
@@ -68,10 +72,25 @@ class Shape:
         return self
 
     def add(self, other, dx=0, dy=0):
+        """add another shape; its cuts (turns, notches) are applied to it first, so they never
+        bite into what it is added to"""
+        if other.cuts:
+            other = other.baked()
         t = other.transformed(1, 1, dx, dy)
         self.contours += t.contours
-        self.cuts += t.cuts
         return self
+
+    def baked(self):
+        """the resolved outline (union minus cuts) as plain contours"""
+        out = Shape()
+        for segs in _contours(resolve(self)):
+            if not segs:
+                continue
+            ops = [("M", segs[0][1][0])]
+            for kind, P in segs:
+                ops.append(("L", P[1]) if kind == "L" else ("C", P[1], P[2], P[3]))
+            out.contours.append(ops)
+        return out
 
 
 def to_path(contour, dx=0):
@@ -151,11 +170,6 @@ def na(sh, xb, yb, xt, yt, wb=118, wt=126, tipdrop=59, bend=0.35):
                    ("C", r1, r2, (xb + wb, yb))])
 
 
-def hook(sh, x1, h, t=B):
-    """钩: the bar's right end turns down into a short tapered hook, angled cut"""
-    return sh.poly((x1 - 64, h - t + 1), (x1, h - t + 1), (x1 - 3, h - t - 42), (x1 - 74, h - t - 88))
-
-
 def sweep(sh, x0, y0, y1, xb0, xb1):
     """curved 撇 leg: leaves the stem between y0..y1 and lands flat on the baseline at xb0..xb1"""
     return sh.raw([("M", (x0, y1)),
@@ -177,20 +191,43 @@ def box(sh, x0, y0, x1, y1, ts=S, tb=B, top=True, bot=True):
     return sh
 
 
-def chamfer(sh, x, y, sx, sy, c_out=130, c_in=58, ts=S, tb=B):
-    """cut a 45° chamfer into an outer corner at (x, y); sx/sy = +1 for a right/top corner.
-    The inner corner gets a matching fill so the diagonal keeps the stroke weight."""
-    e = 30                                   # reach past the corner so bar-end flares are cut too
-    sh.cut((x - sx * c_out, y), (x - sx * c_out, y + sy * e), (x + sx * e, y + sy * e),
-           (x + sx * e, y - sy * c_out), (x, y - sy * c_out))
-    xi, yi = x - sx * ts, y - sy * tb
-    sh.poly((xi + sx, yi + sy), (xi - sx * c_in, yi + sy), (xi + sx, yi - sy * c_in))
-    return sh
-
-
 def over(h):
     """how far 捺 tips rise above the stems"""
     return 175 if h < 600 else 140
+
+
+
+def bend(sh, x, y, sx, sy, ro=None, ri=None, ts=S, tb=B, k=0.58):
+    """Hei turn (横折弯 / 竖弯): round the outer corner at (x, y), and the counter corner inside it.
+    sx/sy = +1 for a right/top corner, -1 for a left/bottom corner."""
+    ro = RO if ro is None else ro
+    ri = RI if ri is None else ri
+    if ro <= 0:
+        return sh
+    M = lambda u, v: (x + sx * u, y + sy * v)
+    e, q = 40, 1 - k
+    sh.cuts.append([("M", M(-ro, 0)), ("L", M(-ro, e)), ("L", M(e, e)), ("L", M(e, -ro)), ("L", M(0, -ro)),
+                    ("C", M(0, -ro * q), M(-ro * q, 0), M(-ro, 0))])
+    if ri:
+        cx, cy = -ts, -tb
+        sh.raw([("M", M(cx, cy)), ("L", M(cx, cy - ri)),
+                ("C", M(cx, cy - ri * q), M(cx - ri * q, cy), M(cx - ri, cy))])
+    return sh
+
+
+def pie_c(sh, xt, yt, xb, yb, wt=124, wb=108, bow=0.06):
+    """撇 turned: falls to the right, tapers, flat cut at both ends; the edges bow slightly"""
+    dx, dy = xb - xt, yb - yt
+    nx, ny = -dy, dx                      # normal (pointing up-right for a down-right stroke)
+    L = (dx * dx + dy * dy) ** 0.5
+    bx, by = nx / L * bow * L, ny / L * bow * L
+    a, b = (xt, yt), (xb, yb)
+    c, d = (xb + wb, yb), (xt + wt, yt)
+    return sh.raw([("M", a),
+                   ("C", (a[0] + dx / 3 + bx, a[1] + dy / 3 + by), (a[0] + 2 * dx / 3 + bx, a[1] + 2 * dy / 3 + by), b),
+                   ("L", c),
+                   ("C", (c[0] - dx / 3 + bx * 0.6, c[1] - dy / 3 + by * 0.6),
+                         (c[0] - 2 * dx / 3 + bx * 0.6, c[1] - 2 * dy / 3 + by * 0.6), d)])
 
 
 # ================================================================ letters
@@ -215,50 +252,48 @@ def _A(h):
 
 
 @letter("B", W2)
-def _B(h):
+def _B(h):            # 日 lying down; the bowls turn on the right
     s = Shape(); t = bi(h)
-    mid = round((h - 2 * B - t) * 0.53) + B
-    stem(s, 0, 0, h)
-    tbar(s, 0, 310, h)
-    stem(s, 210, mid, h - B + 1)
+    mid = round((h - 2 * B - t) * 0.54) + B
+    stem(s, 0, 0, h); stem(s, 240, 0, h)
+    tbar(s, 0, W2, h, fr=False); bbar(s, 0, W2, fr=False)
     xbar(s, 0, W2, mid, t)
-    stem(s, 240, 0, mid + 1)
-    bbar(s, 0, W2)
+    bend(s, W2, h, 1, 1); bend(s, W2, 0, 1, -1)
     return s
 
 
-@letter("C", 340)
-def _C(h):            # 冂 lying down: the hook survives at the top right
+@letter("C", 330)
+def _C(h):
     s = Shape()
     stem(s, 0, 0, h)
-    tbar(s, 0, 340, h, fr=False); bbar(s, 0, 330)
-    hook(s, 340, h)
+    tbar(s, 0, 330, h, fl=False); bbar(s, 0, 320, fl=False)
+    bend(s, 0, h, -1, 1); bend(s, 0, 0, -1, -1)
     return s
 
 
 @letter("D", W2)
-def _D(h):
-    s = box(Shape(), 0, 0, W2, h)          # 巳 lying down, with its right corners cut (unlike O)
-    chamfer(s, W2, h, 1, 1, 175, 103)
-    chamfer(s, W2, 0, 1, -1, 175, 103)
+def _D(h):            # 刀's turn: the right side bends
+    s = box(Shape(), 0, 0, W2, h)
+    r = min(RO * 1.75, h * 0.33)
+    bend(s, W2, h, 1, 1, r, RI * 2); bend(s, W2, 0, 1, -1, r, RI * 2)
     return s
 
 
-@letter("E", 340)
-def _E(h):            # 山 lying down: middle arm longest, top arm shortest
+@letter("E", 330)
+def _E(h):            # 山 lying down
     s = Shape(); t = bi(h)
     stem(s, 0, 0, h)
-    tbar(s, 0, 262, h); bbar(s, 0, 292)
-    xbar(s, 0, 340, round((h - t) / 2), t)
+    tbar(s, 0, 310, h); bbar(s, 0, 330)
+    xbar(s, 0, 290, round((h - t) / 2), t)
     return s
 
 
-@letter("F", 320)
-def _F(h):            # 岂: middle arm longer than the top
+@letter("F", 310)
+def _F(h):            # 岂
     s = Shape(); t = bi(h)
     stem(s, 0, 0, h)
-    tbar(s, 0, 262, h)
-    xbar(s, 0, 320, round(h * 0.36), t)
+    tbar(s, 0, 310, h)
+    xbar(s, 0, 290, round(h * 0.40), t)
     return s
 
 
@@ -266,17 +301,18 @@ def _F(h):            # 岂: middle arm longer than the top
 def _G(h):
     s = Shape(); t = bi(h)
     stem(s, 0, 0, h)
-    tbar(s, 0, W2, h); bbar(s, 0, W2)
-    top = round(h * 0.48) + (0 if h > 600 else 20)
+    tbar(s, 0, W2, h, fl=False); bbar(s, 0, W2, fl=False)
+    top = round(h * 0.47)
     stem(s, 240, 0, top)
-    xbar(s, 165, W2, top - t, t)
+    xbar(s, 160, W2, top - t, t)
+    bend(s, 0, h, -1, 1); bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1)
     return s
 
 
 @letter("H", W2)
-def _H(h):            # 工 lying down: the left stem (工's short top bar) stops early
+def _H(h):            # 工 lying down
     s = Shape(); t = bi(h)
-    stem(s, 0, 0, h - 42); stem(s, 240, 0, h)
+    stem(s, 0, 0, h); stem(s, 240, 0, h)
     xbar(s, 0, W2, round((h - t) / 2), t)
     return s
 
@@ -290,21 +326,22 @@ def _I(h):            # 工
 
 
 @letter("J", W2)
-def _J(h):
+def _J(h):            # 亅
     s = Shape()
     stem(s, 240, 0, h)
-    bbar(s, 0, W2)
-    stem(s, 0, 0, round(h * 0.38))
+    bbar(s, 0, W2, fr=False)
+    stem(s, 0, 0, round(h * 0.36))
+    bend(s, W2, 0, 1, -1); bend(s, 0, 0, -1, -1)
     return s
 
 
-@letter("K", 470)
+@letter("K", 450)
 def _K(h):            # 大 lying down
     s = Shape()
     stem(s, 0, 0, h)
-    sweep(s, 70, round(h * 0.40), round(h * 0.58), 300, 418)
+    sweep(s, 70, round(h * 0.40), round(h * 0.58), 290, 405)
     tip = h + (round(h * 0.1) if h > 600 else over(h) - 60)
-    na(s, 70, round(h * 0.42), 335, tip, wb=128, wt=122, tipdrop=56)
+    na(s, 70, round(h * 0.42), 320, tip, wb=124, wt=118, tipdrop=56)
     return s
 
 
@@ -325,10 +362,11 @@ def _M(h):            # measured
     return s
 
 
-def n_shape(sh, h, with_stem=True):
+def n_shape(sh, h, with_stem=True, ko=None):
     """N traced from the reference (stem 518). Tip overshoot shrinks on tall forms."""
     k = h / 518
-    ko = 1.0 if k <= 1.02 else 0.62
+    if ko is None:
+        ko = 1.0 if k <= 1.02 else 0.62
 
     def Y(y):
         return y * k if y <= 518 else 518 * k + (y - 518) * ko
@@ -359,7 +397,7 @@ def _N(h):
 
 @letter("O", W2)
 def _O(h):
-    return box(Shape(), 0, 0, W2, h)
+    return box(Shape(), 0, 0, W2, h)          # 口: the one round letter that stays square
 
 
 @letter("P", W2)
@@ -367,27 +405,30 @@ def _P(h):
     s = Shape(); t = bi(h)
     mid = round(h * 0.34)
     stem(s, 0, 0, h)
-    tbar(s, 0, W2, h)
+    tbar(s, 0, W2, h, fr=False)
     stem(s, 240, mid, h - B + 1)
     xbar(s, 0, W2, mid, t)
+    bend(s, W2, h, 1, 1); bend(s, W2, mid, 1, -1, ri=RI, tb=t)
     return s
 
 
 @letter("Q", 360)
 def _Q(h):
-    s = box(Shape(), 0, 0, W2, h)
-    pie(s, 135, 250, 290, -160, wt=118, wb=110)
+    s = _O(h)
+    s.poly((240, 120), (345, 120), (425, -125), (320, -125))      # a 撇 foot kicks out below the corner
     return s
 
 
-@letter("R", 380)
-def _R(h):            # 召's 刀 lying down: hooked top, curved 撇 leg
-    s = Shape()
+@letter("R", 390)
+def _R(h):
+    s = Shape(); t = bi(h)
+    mid = round(h * 0.40)
     stem(s, 0, 0, h)
-    tbar(s, 0, 330, h, fr=False)
-    hook(s, 330, h)
-    stem(s, 236, round(h * 0.55), h - B + 1, w=94)
-    sweep(s, 60, round(h * 0.40), round(h * 0.58), 262, 380)
+    tbar(s, 0, W2, h, fr=False)
+    stem(s, 240, mid, h - B + 1)
+    xbar(s, 0, W2 - 60, mid, t)
+    bend(s, W2, h, 1, 1); bend(s, W2, mid + 2, 1, -1, ri=0)
+    sweep(s, 100, mid - 2, mid + t, 270, 390)
     return s
 
 
@@ -395,11 +436,13 @@ def _R(h):            # 召's 刀 lying down: hooked top, curved 撇 leg
 def _S(h):
     s = Shape(); t = bi(h)
     mid = round((h - t) / 2)
-    tbar(s, 0, W2, h)
+    tbar(s, 0, W2, h, fl=False)
     stem(s, 0, mid, h - B + 1)
     xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
-    bbar(s, 0, W2)
+    bbar(s, 0, W2, fr=False)
+    bend(s, 0, h, -1, 1); bend(s, 0, mid, -1, -1, tb=t)
+    bend(s, W2, mid + t, 1, 1, tb=t); bend(s, W2, 0, 1, -1)
     return s
 
 
@@ -415,7 +458,8 @@ def _T(h):            # 十 with its top half cut: wide bar
 def _U(h):
     s = Shape()
     stem(s, 0, 0, h); stem(s, 240, 0, h)
-    bbar(s, 0, W2)
+    bbar(s, 0, W2, fl=False, fr=False)
+    bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1)
     return s
 
 
@@ -433,21 +477,21 @@ def _W(h):            # 山
     return s
 
 
-@letter("X", 520)
-def _X(h):
+@letter("X", 500)
+def _X(h):            # 乂: a 撇 falling right, crossed by a 捺 rising past the top
     s = Shape()
-    pie(s, 0, h, 300, 0, wt=112, wb=104, slant=40)
-    na(s, 0, 0, 380, h + over(h), wb=112, wt=116, tipdrop=52)
+    pie_c(s, 0, h, 290, 0, wt=120, wb=104, bow=0.05)
+    na(s, 10, 0, 360, h + over(h), wb=112, wt=116, tipdrop=52)
     return s
 
 
-@letter("Y", 500)
+@letter("Y", 480)
 def _Y(h):
     s = Shape()
-    jy = round(h * 0.48)
-    pie(s, 0, h, 150, jy - 10, wt=128, wb=120, slant=45)
-    na(s, 150, jy - 40, 365, h + over(h), wb=125, wt=122, tipdrop=55)
-    stem(s, 160, 0, jy + 20, w=110)
+    jy = round(h * 0.46)
+    pie_c(s, 0, h, 150, jy - 6, wt=122, wb=112, bow=0.05)
+    na(s, 140, jy - 40, 350, h + over(h), wb=122, wt=118, tipdrop=55)
+    stem(s, 150, 0, jy + 20, w=108)
     return s
 
 
@@ -455,7 +499,264 @@ def _Y(h):
 def _Z(h):
     s = Shape()
     tbar(s, 0, 420, h); bbar(s, 0, 420)
-    s.poly((0, B - 1), (128, B - 1), (420, h - B + 1), (292, h - B + 1))
+    pie_c(s, 292, h - B + 1, 0, B - 1, wt=128, wb=128, bow=-0.03)
+    return s
+
+
+# ================================================================ lowercase (x-height 527, ascenders 689, descenders -190)
+XH, ASC, DSC = LOW, TALL, DESC
+LB, LI = 124, 104                     # lowercase outer and inner bars
+LC_ = {}
+
+
+def lower(ch, width, top_x=None, asc=False):
+    def deco(fn):
+        LC_[ch] = (width, fn, top_x, asc)
+        return fn
+    return deco
+
+
+@lower("a", 320)
+def _la():
+    s = Shape()
+    tbar(s, 0, 320, XH, t=LB, fr=False)
+    stem(s, 220, 0, XH - LB + 1)
+    xbar(s, 0, 320, 205, LI)
+    stem(s, 0, 0, 205 + LI)
+    bbar(s, 0, 320, t=LB, fr=False)
+    bend(s, 320, XH, 1, 1, tb=LB)
+    return s
+
+
+@lower("b", 320, asc=True)
+def _lb():
+    s = Shape()
+    stem(s, 0, 0, ASC)
+    bar(s, 0, 320, XH - LB, XH, top=True, fl=False, fr=False)
+    stem(s, 220, LB - 1, XH - LB + 1)
+    bbar(s, 0, 320, t=LB, fr=False)
+    bend(s, 320, XH, 1, 1, tb=LB); bend(s, 320, 0, 1, -1, tb=LB)
+    return s
+
+
+@lower("c", 300)
+def _lc():
+    s = Shape()
+    stem(s, 0, 0, XH)
+    tbar(s, 0, 300, XH, t=LB, fl=False); bbar(s, 0, 290, t=LB, fl=False)
+    bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, 0, -1, -1, tb=LB)
+    return s
+
+
+@lower("d", 320, top_x=270, asc=True)
+def _ld():
+    s = Shape()
+    stem(s, 220, 0, ASC)
+    bar(s, 0, 320, XH - LB, XH, top=True, fl=False, fr=False)
+    stem(s, 0, LB - 1, XH - LB + 1)
+    bbar(s, 0, 320, t=LB, fl=False)
+    bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, 0, -1, -1, tb=LB)
+    return s
+
+
+@lower("e", 320)
+def _le(left_round=True):
+    s = Shape()
+    stem(s, 0, 0, XH)
+    tbar(s, 0, 320, XH, t=LB, fl=False, fr=False)
+    stem(s, 220, 225, XH - LB + 1)
+    xbar(s, 0, 320, 225, LI)
+    bbar(s, 0, 300, t=LB, fl=False)
+    bend(s, 320, XH, 1, 1, tb=LB)
+    if left_round:
+        bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, 0, -1, -1, tb=LB)
+    return s
+
+
+@lower("f", 270, top_x=110, asc=True)
+def _lf():
+    s = Shape()
+    stem(s, 60, 0, ASC)
+    tbar(s, 60, 270, ASC, t=LB, fl=False)
+    xbar(s, 0, 250, XH - LI, LI)
+    bend(s, 60, ASC, -1, 1, tb=LB)
+    return s
+
+
+@lower("g", 320)
+def _lg():
+    s = Shape()
+    tbar(s, 0, 320, XH, t=LB, fl=False)
+    stem(s, 0, 0, XH - LB + 1)
+    stem(s, 220, DSC + LB - 1, XH)
+    xbar(s, 0, 320, 0, LI)
+    bbar(s, 0, 320, DSC, t=LB, fr=False)
+    bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, 0, -1, -1, tb=LI); bend(s, 320, DSC, 1, -1, tb=LB)
+    return s
+
+
+@lower("h", 320, top_x=50, asc=True)
+def _lh():
+    s = Shape()
+    stem(s, 0, 0, ASC)
+    bar(s, 0, 320, XH - LB, XH, top=True, fl=False)
+    stem(s, 220, 0, XH - LB + 1)
+    return s
+
+
+@lower("i", 100)
+def _li():
+    s = Shape()
+    stem(s, 0, 0, XH)
+    return s
+
+
+@lower("j", 230)
+def _lj():
+    s = Shape()
+    stem(s, 130, DSC + LB - 1, XH)
+    bbar(s, 0, 230, DSC, t=LB, fr=False)
+    bend(s, 230, DSC, 1, -1, tb=LB)
+    return s
+
+
+@lower("k", 420, top_x=50, asc=True)
+def _lk():
+    s = Shape()
+    stem(s, 0, 0, ASC)
+    sweep(s, 70, round(XH * 0.36), round(XH * 0.56), 280, 395)
+    na(s, 70, round(XH * 0.40), 300, XH + 70, wb=118, wt=112, tipdrop=52)
+    return s
+
+
+@lower("l", 100, asc=True)
+def _ll():
+    return stem(Shape(), 0, 0, ASC)
+
+
+@lower("m", 470)
+def _lm():
+    s = Shape()
+    tbar(s, 0, 470, XH, t=LB)
+    for x in (0, 185, 370):
+        stem(s, x, 0, XH - LB + 1)
+    return s
+
+
+@lower("n", 320)
+def _ln():
+    s = Shape()
+    tbar(s, 0, 320, XH, t=LB)
+    stem(s, 0, 0, XH - LB + 1); stem(s, 220, 0, XH - LB + 1)
+    return s
+
+
+@lower("o", 320)
+def _lo():
+    return box(Shape(), 0, 0, 320, XH, tb=LB)
+
+
+@lower("p", 320)
+def _lp():
+    s = Shape()
+    stem(s, 0, DSC, XH)
+    bar(s, 0, 320, XH - LB, XH, top=True, fr=False)
+    stem(s, 220, 0, XH)
+    xbar(s, 0, 320, 0, LB)
+    bend(s, 320, XH, 1, 1, tb=LB); bend(s, 320, 0, 1, -1, tb=LB)
+    return s
+
+
+@lower("q", 320, top_x=160)
+def _lq():
+    s = Shape()
+    stem(s, 220, DSC, XH)
+    bar(s, 0, 320, XH - LB, XH, top=True, fl=False)
+    stem(s, 0, 0, XH)
+    xbar(s, 0, 320, 0, LB)
+    bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, 0, -1, -1, tb=LB)
+    return s
+
+
+@lower("r", 250)
+def _lr():
+    s = Shape()
+    stem(s, 0, 0, XH)
+    tbar(s, 0, 250, XH, t=LB)
+    return s
+
+
+@lower("s", 320)
+def _ls():
+    s = Shape()
+    mid = round((XH - LI) / 2)
+    tbar(s, 0, 320, XH, t=LB, fl=False)
+    stem(s, 0, mid, XH - LB + 1)
+    xbar(s, 0, 320, mid, LI)
+    stem(s, 220, LB - 1, mid + 1)
+    bbar(s, 0, 320, t=LB, fr=False)
+    bend(s, 0, XH, -1, 1, tb=LB); bend(s, 0, mid, -1, -1, tb=LI)
+    bend(s, 320, mid + LI, 1, 1, tb=LI); bend(s, 320, 0, 1, -1, tb=LB)
+    return s
+
+
+@lower("t", 270, top_x=110)
+def _lt():
+    s = Shape()
+    stem(s, 60, LB - 1, 640)
+    xbar(s, 0, 270, XH - LI, LI)
+    bbar(s, 60, 270, t=LB, fl=False)
+    bend(s, 60, 0, -1, -1, tb=LB)
+    return s
+
+
+@lower("u", 320)
+def _lu():
+    s = Shape()
+    stem(s, 0, 0, XH); stem(s, 220, 0, XH)
+    bbar(s, 0, 320, t=LB, fl=False, fr=False)
+    bend(s, 0, 0, -1, -1, tb=LB); bend(s, 320, 0, 1, -1, tb=LB)
+    return s
+
+
+@lower("v", 440, top_x=330)
+def _lv():            # the 捺 tip barely clears the x-height, so v never reads as a capital
+    return n_shape(Shape(), XH, with_stem=False, ko=0.16).transformed(0.82, 1.0)
+
+
+@lower("w", 470)
+def _lw():
+    s = Shape()
+    bbar(s, 0, 470, t=LB)
+    for x in (0, 185, 370):
+        stem(s, x, LB - 1, XH)
+    return s
+
+
+@lower("x", 470)
+def _lx():
+    s = Shape()
+    pie_c(s, 0, XH, 270, 0, wt=116, wb=100, bow=0.05)
+    na(s, 10, 0, 330, XH + 100, wb=108, wt=112, tipdrop=50)
+    return s
+
+
+@lower("y", 320)
+def _ly():
+    s = Shape()
+    stem(s, 0, 0, XH)
+    stem(s, 220, DSC + LB - 1, XH)
+    xbar(s, 0, 320, 0, LI)
+    bbar(s, 0, 320, DSC, t=LB, fr=False)
+    bend(s, 0, 0, -1, -1, tb=LI); bend(s, 320, DSC, 1, -1, tb=LB)
+    return s
+
+
+@lower("z", 380)
+def _lz():
+    s = Shape()
+    tbar(s, 0, 380, XH, t=LB); bbar(s, 0, 380, t=LB)
+    pie_c(s, 262, XH - LB + 1, 0, LB - 1, wt=118, wb=118, bow=-0.03)
     return s
 
 
@@ -470,10 +771,11 @@ def digit(name, ch, width):
     return deco
 
 
-@digit("zero", "0", W2)
-def _0(h):            # dotted zero: a 点 in the counter, so 0 never reads as O
-    s = box(Shape(), 0, 0, W2, h)
-    rect(s, 124, round(h / 2) - 62, 216, round(h / 2) + 62)
+@digit("zero", "0", 300)
+def _0(h):            # narrower than O, and every corner turns
+    s = box(Shape(), 0, 0, 300, h)
+    for x, y, sx, sy in ((0, 0, -1, -1), (300, 0, 1, -1), (0, h, -1, 1), (300, h, 1, 1)):
+        bend(s, x, y, sx, sy, RO * 1.1, RI * 1.2)
     return s
 
 
@@ -490,20 +792,22 @@ def _1(h):            # the flag is a 撇, so 1 never reads as I
 def _2(h):
     s = Shape(); t = bi(h)
     mid = round((h - t) / 2)
-    tbar(s, 0, W2, h)
+    tbar(s, 0, W2, h, fr=False)
     stem(s, 240, mid, h - B + 1)
     xbar(s, 0, W2, mid, t)
     stem(s, 0, B - 1, mid + 1)
     bbar(s, 0, W2)
+    bend(s, W2, h, 1, 1); bend(s, W2, mid, 1, -1, tb=t); bend(s, 0, mid + t, -1, 1, tb=t)
     return s
 
 
 @digit("three", "3", W2)
 def _3(h):            # 山 lying down
     s = Shape()
-    tbar(s, 0, W2, h); bbar(s, 0, W2)
+    tbar(s, 0, W2, h, fr=False); bbar(s, 0, W2, fr=False)
     xbar(s, 70, W2, round((h - bi(h)) / 2), bi(h))
     stem(s, 240, 0, h)
+    bend(s, W2, h, 1, 1); bend(s, W2, 0, 1, -1)
     return s
 
 
@@ -527,8 +831,7 @@ def _5(h):
     xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
     bbar(s, 0, W2, fr=False)
-    chamfer(s, W2, mid + t, 1, 1, 150, 92, tb=t)  # a rounded bowl, unlike the square S
-    chamfer(s, W2, 0, 1, -1, 160, 88)
+    bend(s, W2, mid + t, 1, 1, RO * 1.2, RI * 1.3, tb=t); bend(s, W2, 0, 1, -1, RO * 1.2, RI * 1.3)
     return s
 
 
@@ -538,10 +841,11 @@ def _6(h):
     t = bi(h)
     mid = round((h - t) * 0.48)
     stem(s, 0, 0, h)
-    tbar(s, 0, 250, h, fr=False)                    # open top right: not 8, not S
+    tbar(s, 0, 290, h, fl=False)
     xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
-    bbar(s, 0, W2)
+    bbar(s, 0, W2, fl=False, fr=False)
+    bend(s, 0, h, -1, 1); bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1); bend(s, W2, mid + t, 1, 1, tb=t)
     return s
 
 
@@ -549,7 +853,7 @@ def _6(h):
 def _7(h):
     s = Shape()
     tbar(s, 0, W2, h)
-    s.poly((95, 0), (210, 0), (W2, h - B + 1), (215, h - B + 1))
+    pie_c(s, 220, h - B + 1, 70, 0, wt=120, wb=112, bow=-0.04)
     return s
 
 
@@ -558,10 +862,11 @@ def _8(h):
     s = Shape(); t = bi(h)                         # narrower top bowl: not B, not 0
     mid = round((h - t) * 0.5)
     stem(s, 0, 0, mid + t); stem(s, 240, 0, mid + t)
-    bbar(s, 0, W2)
+    bbar(s, 0, W2, fl=False, fr=False)
     xbar(s, 0, W2, mid, t)
-    stem(s, 45, mid, h); stem(s, 195, mid, h)
-    tbar(s, 45, 295, h)
+    stem(s, 30, mid, h); stem(s, 210, mid, h)
+    tbar(s, 30, 310, h, fl=False, fr=False)
+    bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1); bend(s, 30, h, -1, 1); bend(s, 310, h, 1, 1)
     return s
 
 
@@ -570,12 +875,14 @@ def _9(h):
     s = Shape()
     t = bi(h)
     mid = round((h - t) * 0.52)
-    tbar(s, 0, W2, h)
+    tbar(s, 0, W2, h, fl=False, fr=False)
     stem(s, 0, mid, h - B + 1)
     xbar(s, 0, W2, mid, t)
     stem(s, 240, 0, h)
-    bbar(s, 90, W2, fl=False)                       # open bottom left: 6 turned round
+    bbar(s, 50, W2, fr=False)
+    bend(s, 0, h, -1, 1); bend(s, W2, h, 1, 1); bend(s, 0, mid, -1, -1, tb=t); bend(s, W2, 0, 1, -1)
     return s
+
 
 
 # ================================================================ punctuation & symbols
@@ -646,11 +953,12 @@ def _exclamdown():
 
 def question(s, dy=0, flip=False):
     pts = Shape()
-    tbar(pts, 0, 320, T)
+    tbar(pts, 0, 320, T, fr=False)
     stem(pts, 220, 330, T - B + 1)
-    xbar(pts, 110, 320, 330)
+    xbar(pts, 110, 320, 330, 112)
     stem(pts, 110, 200, 331)
     sq(pts, 101, 0)
+    bend(pts, 320, T, 1, 1); bend(pts, 320, 330, 1, -1, tb=112)
     if flip:   # rotate 180° about (160, T/2) and drop below
         for c in pts.contours:
             nc = []
@@ -774,32 +1082,36 @@ def _bkr():
 
 
 @sym("parenleft", "(", 230)
-def _pl():           # bracket with the corners stepped in, like D
-    s = Shape(); stem(s, 0, -20, T - 10)
-    tbar(s, 70, 230, T + 60, fl=False); bbar(s, 70, 230, y=-90, fl=False)
+def _pl():           # a bracket whose corners turn, like D
+    s = Shape(); stem(s, 0, -90, T + 60)
+    tbar(s, 0, 230, T + 60, t=118, fl=False); bbar(s, 0, 230, y=-90, t=118, fl=False)
+    bend(s, 0, T + 60, -1, 1, 150, 45, tb=118); bend(s, 0, -90, -1, -1, 150, 45, tb=118)
     return s
 
 
 @sym("parenright", ")", 230)
 def _pr():
-    s = Shape(); stem(s, 130, -20, T - 10)
-    tbar(s, 0, 160, T + 60, fr=False); bbar(s, 0, 160, y=-90, fr=False)
+    s = Shape(); stem(s, 130, -90, T + 60)
+    tbar(s, 0, 230, T + 60, t=118, fr=False); bbar(s, 0, 230, y=-90, t=118, fr=False)
+    bend(s, 230, T + 60, 1, 1, 150, 45, tb=118); bend(s, 230, -90, 1, -1, 150, 45, tb=118)
     return s
 
 
 @sym("braceleft", "{", 270)
 def _bcl():
     s = Shape(); stem(s, 60, -90, T + 60)
-    tbar(s, 60, 270, T + 60); bbar(s, 60, 270, y=-90)
+    tbar(s, 60, 270, T + 60, t=118, fl=False); bbar(s, 60, 270, y=-90, t=118, fl=False)
     xbar(s, 0, 160, 230, 120)
+    bend(s, 60, T + 60, -1, 1, 130, 40, tb=118); bend(s, 60, -90, -1, -1, 130, 40, tb=118)
     return s
 
 
 @sym("braceright", "}", 270)
 def _bcr():
     s = Shape(); stem(s, 110, -90, T + 60)
-    tbar(s, 0, 210, T + 60); bbar(s, 0, 210, y=-90)
+    tbar(s, 0, 210, T + 60, t=118, fr=False); bbar(s, 0, 210, y=-90, t=118, fr=False)
     xbar(s, 110, 270, 230, 120)
+    bend(s, 210, T + 60, 1, 1, 130, 40, tb=118); bend(s, 210, -90, 1, -1, 130, 40, tb=118)
     return s
 
 
@@ -904,11 +1216,13 @@ def _hash():
 def _at():
     s = Shape()
     stem(s, 0, -90, T); stem(s, 520, 130, T)
-    tbar(s, 0, 620, T)
-    bar(s, 0, 520, -90, -90 + B, bot=True, fr=False)
+    tbar(s, 0, 620, T, fl=False, fr=False)
+    bar(s, 0, 540, -90, -90 + B, bot=True, fl=False, fr=False)
     stem(s, 190, 130, 470)
     xbar(s, 190, 620, 130)
     xbar(s, 190, 520, 470 - B)
+    bend(s, 0, T, -1, 1); bend(s, 620, T, 1, 1); bend(s, 0, -90, -1, -1)
+    bend(s, 190, 470, -1, 1, 90, 0); bend(s, 190, 130, -1, -1, 90, 0)
     return s
 
 
@@ -926,15 +1240,14 @@ def _amp():           # "Et": an E with a t-stem through its arm
 
 @sym("dollar", "$", W2)
 def _dollar():
-    s = _S(T)
+    s = Shape().add(_S(T))
     return stem(s, 120, -90, T + 90)
 
 
 @sym("cent", "¢", 330)
 def _cent():
     s = Shape(); h = LOW
-    stem(s, 0, 0, h); tbar(s, 0, 340, h, fr=False); bbar(s, 0, 330)
-    hook(s, 340, h)
+    s.add(_lc())
     return stem(s, 140, -90, h + 90)
 
 
@@ -959,8 +1272,9 @@ def _yen():
 def _euro():
     s = Shape()
     stem(s, 80, 0, T)
-    tbar(s, 80, 420, T); bbar(s, 80, 420)
-    xbar(s, 0, 330, 380, 90); xbar(s, 0, 330, 220, 90)
+    tbar(s, 80, 420, T, fl=False); bbar(s, 80, 420, fl=False)
+    bend(s, 80, T, -1, 1); bend(s, 80, 0, -1, -1)
+    xbar(s, 0, 330, 390, 90); xbar(s, 0, 330, 210, 90)
     return s
 
 
@@ -977,11 +1291,13 @@ def _pct():
 @sym("section", "§", W2)
 def _sect():
     s = Shape()
-    tbar(s, 0, W2, T + 40)
+    tbar(s, 0, W2, T + 40, fl=False)
     stem(s, 0, 300, T - 90)
     box(s, 0, 160, W2, 520, tb=100, top=False, bot=False)
-    stem(s, 240, 30, 260)
-    bbar(s, 0, W2, y=-110)
+    stem(s, 240, 20, 260)
+    bbar(s, 0, W2, y=-110, fr=False)
+    bend(s, 0, T + 40, -1, 1); bend(s, W2, -110, 1, -1)
+    bend(s, W2, 520, 1, 1, 110, 30, tb=100); bend(s, 0, 160, -1, -1, 110, 30, tb=100)
     return s
 
 
@@ -1012,6 +1328,8 @@ def _deg():
 @sym("copyright", "©", 680)
 def _copy():
     s = box(Shape(), 0, -10, 680, T + 10)
+    for x, y, sx, sy in ((0, -10, -1, -1), (680, -10, 1, -1), (0, T + 10, -1, 1), (680, T + 10, 1, 1)):
+        bend(s, x, y, sx, sy)
     stem(s, 210, 200, 480, w=90)
     xbar(s, 210, 470, 200, 90); xbar(s, 210, 470, 390, 90)
     return s
@@ -1020,6 +1338,8 @@ def _copy():
 @sym("registered", "®", 680)
 def _reg():
     s = box(Shape(), 0, -10, 680, T + 10)
+    for x, y, sx, sy in ((0, -10, -1, -1), (680, -10, 1, -1), (0, T + 10, -1, 1), (680, T + 10, 1, 1)):
+        bend(s, x, y, sx, sy)
     stem(s, 210, 200, 490, w=90)
     xbar(s, 210, 470, 400, 90); xbar(s, 210, 470, 290, 80)
     stem(s, 380, 290, 490, w=90)
@@ -1133,9 +1453,10 @@ def acc_comma(s, cx, y=0):          # comma below: a short 撇
     return s.poly((cx - 15, -75), (cx + 85, -75), (cx + 15, -250), (cx - 85, -250))
 
 
-def acc_ogonek(s, x, y=0):
-    stem(s, x - 45, -170, 10, w=90)
-    return rect(s, x - 45, -235, x + 125, -145)
+def acc_ogonek(s, x, y=0):          # a small 乚: drops, then turns right
+    stem(s, x - 45, -150, 10, w=90)
+    rect(s, x - 45, -225, x + 115, -140)
+    return bend(s, x - 45, -225, -1, -1, 80, 0)
 
 
 def acc_caron_side(s, x, ytop):     # Ľ ľ: the caron becomes a 撇 beside the stem
@@ -1157,14 +1478,11 @@ TOP_X = {"N": 160, "Y": 175, "W": 243, "K": 150, "L": 70, "R": 165}    # off-cen
 BOTTOM_X = {"N": 185, "K": 165}
 OGONEK_X = {"A": 290, "E": 240, "I": 220, "U": 290}
 COMMA_BELOW = set("ĢģĶķĻļŅņŖŗ")     # Latvian: comma below, though Unicode decomposes to cedilla
-SIDE_CARON = set("Ľľ")
+SIDE_CARON = {"Ľ": (125, TALL), "ľ": (125, TALL), "ď": (345, TALL), "ť": (185, 640)}
+SIDE_CARON_CH = set(SIDE_CARON)
 MARK_X = -(SB + 170)                # combining marks sit over the preceding letter by default
 
 # ================================================================ glyph records
-LOWER_DRAW_H = 573                  # lowercase is drawn at this height, then scaled (0.9, 0.92)
-LSX, LSY = 0.9, 0.92
-
-
 class Glyph:
     def __init__(self, name, unis, shape, kind, w=0, h=TALL, space_key=None, kern_key=None, anchors=None):
         self.name, self.unis, self.shape, self.kind = name, list(unis), shape, kind
@@ -1183,18 +1501,23 @@ def glyph_name(ch):
     return UV2AGL.get(ord(ch), "uni%04X" % ord(ch))
 
 
+OGONEK_XL = {"a": 265, "e": 250, "i": 50, "u": 265}
+DOT_X = {"i": 50, "j": 180}
+
+
 def letter_record(ch, h, lower):
-    """drawing + anchors for one letter form. lower=True gives the narrower, lighter lowercase."""
-    w, fn = L_[ch.upper()]
-    key = ch.upper()
+    """drawing + anchors for one letter form: a capital at height h, or a lowercase letter"""
     if lower:
-        shape = fn(LOWER_DRAW_H).transformed(LSX, LSY)
-        w, h, sx = w * LSX, LOW, LSX
-    else:
-        shape, sx = fn(h), 1.0
-    cx = TOP_X.get(key, L_[key][0] / 2) * sx
-    anchors = {"top": (cx, h + 60), "bottom": (BOTTOM_X.get(key, L_[key][0] / 2) * sx, 0),
-               "ogonek": (OGONEK_X.get(key, L_[key][0] - 55) * sx, 0)}
+        w, fn, top_x, asc = LC_[ch]
+        shape = fn()
+        cx = w / 2 if top_x is None else top_x
+        anchors = {"top": (cx, (ASC if asc else XH) + 60), "bottom": (w / 2, 0),
+                   "ogonek": (OGONEK_XL.get(ch, w - 55), 0)}
+        return shape, w, LOW, anchors
+    w, fn = L_[ch]
+    shape = fn(h)
+    anchors = {"top": (TOP_X.get(ch, w / 2), h + 60), "bottom": (BOTTOM_X.get(ch, w / 2), 0),
+               "ogonek": (OGONEK_X.get(ch, w - 55), 0)}
     return shape, w, h, anchors
 
 
@@ -1207,9 +1530,12 @@ def with_mark(shape, mark, anchors, h, ch_base):
         BOTTOM_MARKS[mark](s, anchors["bottom"][0])
     elif mark == "ogonek":
         acc_ogonek(s, anchors["ogonek"][0])
+    elif mark == "commaabove":
+        x, y = anchors["top"]
+        s.poly((x - 85, y), (x + 15, y), (x + 85, y + 175), (x - 15, y + 175))
     elif mark == "caronside":
-        stem_right = (100 if ch_base.isupper() else 100 * LSX) + 25
-        acc_caron_side(s, stem_right, h)
+        x, ytop = SIDE_CARON[ch_base]
+        acc_caron_side(s, x, ytop)
     return s
 
 
@@ -1226,7 +1552,8 @@ def decompositions():
             continue
         mark = COMBINING[mk]
         if chr(cp) in COMMA_BELOW: mark = "commaaccent"
-        if chr(cp) in SIDE_CARON: mark = "caronside"
+        if chr(cp) == "ģ": mark = "commaabove"         # Latvian ģ: the comma turns and sits on top
+        if chr(cp) in SIDE_CARON_CH: mark = "caronside"
         out.append((chr(cp), base, mark))
     return out
 
@@ -1240,7 +1567,7 @@ def collect(style):
     cap_h = lambda c: TALL if (even or c not in LOWCAPS) else LOW
     base = {}
 
-    # --- base letters: capitals, lowercase (narrower and lighter), ss01 alternates
+    # --- base letters: capitals, lowercase, ss01 alternates
     for C in L_:
         shape, w, h, an = letter_record(C, cap_h(C), False)
         base[C] = (shape, w, h, an)
@@ -1248,9 +1575,8 @@ def collect(style):
         c = C.lower()
         shape, w, h, an = letter_record(c, LOW, True)
         if c in "ij":                       # 点 on i and j; dotless forms for marks above
-            stem_c = (150 if c == "i" else 290) * LSX
             dotless = Shape().add(shape)
-            shape = Shape().add(shape); sq(shape, stem_c - 54, LOW + 60, 108)
+            shape = Shape().add(shape); rect(shape, DOT_X[c] - 52, XH + 78, DOT_X[c] + 52, XH + 174)
             dname = "dotlessi" if c == "i" else glyph_name("ȷ")
             base[dname] = (dotless, w, h, an)
             G.append(Glyph(dname, "ı" if c == "i" else "ȷ", dotless, "letter", w, h, space_key=c, kern_key=c, anchors=an))
@@ -1270,22 +1596,16 @@ def collect(style):
         if lower and b in "ij" and mark in TOP_MARKS:
             bkey = "dotlessi" if b == "i" else glyph_name("ȷ")
         shape, w, h, an = base[bkey]
-        G.append(Glyph(name, ch, with_mark(shape, mark, an, h, b), "letter", w, h,
+        G.append(Glyph(name, ch, with_mark(shape, mark, an, h, ch), "letter", w, h,
                        space_key=b, kern_key=b + "_m", anchors=an))
         if not lower and b in LOWCAPS:
             shape, w, h, an = base[b + ".ss01"]
-            G.append(Glyph(name + ".ss01", "", with_mark(shape, mark, an, h, b), "letter", w, h,
+            G.append(Glyph(name + ".ss01", "", with_mark(shape, mark, an, h, ch), "letter", w, h,
                            space_key=b, kern_key=b + "_alt_m", anchors=an))
 
     # --- letters that are not base + mark
-    def lc(fn):                                   # draw at the lowercase height, then scale
-        return fn(LOWER_DRAW_H).transformed(LSX, LSY)
-
-    def special(name, uni, draw, w):
-        for lower in (False, True):
-            sh = draw(LOWER_DRAW_H).transformed(LSX, LSY) if lower else draw(TALL)
-            ch = uni[1] if lower else uni[0]
-            G.append(Glyph(glyph_name(ch), ch, sh, "letter", w * (LSX if lower else 1), LOW if lower else TALL))
+    def special(ch, sh, w, space_key=None):
+        G.append(Glyph(glyph_name(ch), ch, sh, "letter", w, LOW if ch.islower() else TALL, space_key=space_key))
 
     def ae(h):
         s = Shape(); t = bi(h)
@@ -1300,34 +1620,49 @@ def collect(style):
         xbar(s, 340, 600, round((h - t) / 2), t)
         return s
 
-    def oslash(h):
-        s = _O(h); s.poly((-40, -50), (60, -50), (380, h + 50), (280, h + 50)); return s
+    def slash_through(s, w, top, bottom=-50):
+        return s.poly((-40, bottom), (60, bottom), (w + 40, top), (w - 60, top))
 
-    def eth(h):
-        s = Shape().add(_D(h), dx=80); xbar(s, 0, 240, round((h - 100) / 2), 100); return s
-
-    def thorn(h):
-        s = Shape(); t = bi(h); stem(s, 0, 0, h)
-        lo, hi = round(h * 0.16), round(h * 0.7)
-        xbar(s, 0, W2, lo, t); xbar(s, 0, W2, hi - t, t); stem(s, 240, lo, hi)
-        return s
-
-    def lslash(h):
-        s = _L(h); s.poly((-50, h * .28), (190, h * .48), (190, h * .48 + 95), (-50, h * .28 + 95)); return s
-
-    def hbar(h):
-        s = _H(h); xbar(s, -45, W2 + 45, round(h * .70), 92); return s
-
-    def tbar_(h):
-        s = _T(h); xbar(s, 115, 365, round(h * .42), 92); return s
-
-    special("AE", "Ææ", ae, 600); special("OE", "Œœ", oe, 600); special("Oslash", "Øø", oslash, W2)
-    special("Eth", "Ðð", eth, W2 + 80); special("Thorn", "Þþ", thorn, W2)
-    special("Dcroat", "Đđ", eth, W2 + 80); special("Lslash", "Łł", lslash, 320)
-    special("Hbar", "Ħħ", hbar, W2); special("Tbar", "Ŧŧ", tbar_, 480)
-    s = lc(_B); stem(s, 0, DESC, 1, w=90)                       # ß: a small B with a descender
-    G.append(Glyph("germandbls", "ß", s, "letter", W2 * LSX, LOW))
-    s = _B(TALL); chamfer(s, 310, TALL, 1, 1, 175, 103)       # ẞ: B with a cut corner
+    special("Æ", ae(TALL), 600)
+    special("æ", Shape().add(_la()).add(_le(False), dx=220), 540)
+    special("Œ", oe(TALL), 600)
+    special("œ", Shape().add(_lo()).add(_le(False), dx=220), 540)
+    special("Ø", slash_through(_O(TALL), W2, TALL + 50), W2, space_key="O")
+    special("ø", slash_through(_lo(), 320, XH + 50), 320, space_key="o")
+    eth = Shape().add(_D(TALL), dx=80); xbar(eth, 0, 240, round((TALL - 100) / 2), 100)
+    special("Ð", eth, W2 + 80); special("Đ", Shape().add(eth), W2 + 80)
+    d_bar = Shape().add(_ld()); xbar(d_bar, 130, 400, 575, 90)
+    special("đ", d_bar, 400)
+    eth_l = Shape().add(_ld()); xbar(eth_l, 110, 380, 575, 90)
+    special("ð", eth_l, 380)
+    thorn = Shape(); t = bi(TALL); stem(thorn, 0, 0, TALL)
+    lo, hi = round(TALL * 0.16), round(TALL * 0.7)
+    xbar(thorn, 0, W2, lo, t); xbar(thorn, 0, W2, hi - t, t); stem(thorn, 240, lo, hi)
+    special("Þ", thorn, W2)
+    th = Shape(); stem(th, 0, DSC, ASC); xbar(th, 0, 320, XH - LB, LB); stem(th, 220, 0, XH); xbar(th, 0, 320, 0, LB)
+    bend(th, 320, XH, 1, 1, tb=LB); bend(th, 320, 0, 1, -1, tb=LB)
+    special("þ", th, 320)
+    lsl = _L(TALL); lsl.poly((-50, TALL * .28), (190, TALL * .48), (190, TALL * .48 + 95), (-50, TALL * .28 + 95))
+    special("Ł", lsl, 320, space_key="L")
+    lsl = _ll(); lsl.poly((-80, 250), (180, 400), (180, 490), (-80, 340))
+    special("ł", lsl, 100)
+    hb = _H(TALL); xbar(hb, -45, W2 + 45, round(TALL * .70), 92)
+    special("Ħ", hb, W2, space_key="H")
+    hb = _lh(); xbar(hb, -50, 200, 575, 90)
+    special("ħ", hb, 320)
+    tb_ = _T(TALL); xbar(tb_, 115, 365, round(TALL * .42), 92)
+    special("Ŧ", tb_, 480, space_key="T")
+    tb_ = _lt(); xbar(tb_, 0, 270, 250, 90)
+    special("ŧ", tb_, 270, space_key="t")
+    s = Shape(); mid = 300                                        # ß: a narrow upper turn over an open lower one
+    stem(s, 0, 0, ASC); tbar(s, 0, 290, ASC, t=LB, fl=False, fr=False); stem(s, 190, mid + LI - 1, ASC - LB + 1)
+    xbar(s, 0, 320, mid, LI); stem(s, 220, LB - 1, mid + 1); bbar(s, 150, 320, t=LB, fr=False)
+    bend(s, 0, ASC, -1, 1, tb=LB); bend(s, 290, ASC, 1, 1, tb=LB); bend(s, 320, mid + LI, 1, 1, tb=LI); bend(s, 320, 0, 1, -1, tb=LB)
+    G.append(Glyph("germandbls", "ß", s, "letter", 320, LOW))
+    s = Shape(); t = bi(TALL); mid = 300                          # ẞ: the same turns, capital size
+    stem(s, 0, 0, TALL); tbar(s, 0, 310, TALL, fr=False); stem(s, 210, mid + t - 1, TALL - B + 1)
+    xbar(s, 0, W2, mid, t); stem(s, 240, B - 1, mid + 1); bbar(s, 160, W2, fr=False)
+    bend(s, 310, TALL, 1, 1); bend(s, W2, mid + t, 1, 1, tb=t); bend(s, W2, 0, 1, -1)
     G.append(Glyph(glyph_name("ẞ"), "ẞ", s, "letter", W2, TALL))
     for ch, fn in (("ª", _A), ("º", _O)):                       # ordinals: raised small letter, underlined
         s = fn(TALL).transformed(0.48, 0.48, 0, 340); xbar(s, 0, W2 * 0.48, 250, 60)
@@ -1373,16 +1708,24 @@ class RoundPen:
     def endPath(self): self.p.endPath()
 
 
+def _union(paths):
+    try:
+        b = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
+        for q in paths:
+            b.add(q, pathops.PathOp.UNION)
+        return b.resolve()
+    except pathops.PathOpsError:               # coincident edges: merge one contour at a time
+        acc = pathops.Path()
+        for q in paths:
+            acc = pathops.op(acc, pathops.simplify(q, fix_winding=True), pathops.PathOp.UNION,
+                             fix_winding=True, keep_starting_points=False)
+        return acc
+
+
 def resolve(shape, dx=0):
-    b = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
-    for c in shape.contours:
-        b.add(to_path(c, dx), pathops.PathOp.UNION)
-    path = b.resolve()
+    path = _union([to_path(c, dx) for c in shape.contours])
     if shape.cuts:
-        cb = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
-        for c in shape.cuts:
-            cb.add(to_path(c, dx), pathops.PathOp.UNION)
-        path = pathops.op(path, cb.resolve(), pathops.PathOp.DIFFERENCE)
+        path = pathops.op(path, _union([to_path(c, dx) for c in shape.cuts]), pathops.PathOp.DIFFERENCE)
     return path
 
 
@@ -1683,7 +2026,7 @@ def build(style, out):
                      "Notice": COPYRIGHT, "Weight": "Regular"}, cs,
                   {   # alignment zones and stems, for hinting: baseline, short height, cap height
                       "BlueValues": [-12, 0, LOW, LOW + 12, TALL, TALL + 12], "OtherBlues": [DESC - 12, DESC],
-                      "StdHW": B, "StdVW": S, "StemSnapH": [108, 112, B], "StemSnapV": [90, S]})
+                      "StdHW": B, "StdVW": S, "StemSnapH": [LI, 112, LB, B], "StemSnapV": [90, S]})
     fb.setupHorizontalMetrics(mt)
     fb.setupHorizontalHeader(ascent=950, descent=-250)
     regular = style == "Regular"

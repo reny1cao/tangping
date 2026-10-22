@@ -25,20 +25,21 @@ Lay 曼 down counter-clockwise and cut off a little under half of it. 日 become
 - **Thick bars, thin stems.** Bars are Hei vertical strokes turned flat (135 units). Stems are Hei horizontals stood upright (100 units).
 - **Cut at the baseline.** Every stem ends in a straight slice, where the character was cut.
 - **撇 falls, 捺 rises.** Strokes falling to the right taper like 撇. Strokes rising to the right sweep past the top like 捺 and end in an angled tip.
-- **Condensed, with two heights.** Two-stem letters are 340 units wide. Tall forms stand 689, short forms 527.
+- **Curves bend like Hei turns.** Where a Latin letter is round, its corners bend the way 九, 己 and 乚 bend in a bold Hei font. Square letters keep square corners, and O stays a square 口.
+- **Condensed, with two heights.** Two-stem letters are 340 units wide. Capitals stand 689; lowercase stands 527, as M and N do in the original, with ascenders and descenders.
 
 ## Every letter has a source
 
 ![Source map](docs/images/source-map.png)
 
-We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quarter-turn both ways and cutting straight across (at most half), then scored every piece against the Tangping letter. The letterforms were redrawn to follow what the sources show: C keeps 冂's hook, E has 山's long middle arm, R takes the curved leg of 召's 刀, T is as wide as half of 十.
+We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quarter-turn both ways and cutting straight across (at most half), then scored every piece against the Tangping letter. E is the 山 inside 端, R takes the curved leg of 召's 刀, T is as wide as half of 十.
 
 | | | | | | | | | | | | | |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| A 曼 | B 巴 | C 冂 | D 巳 | E 山 | F 岂 | G 町 | H 工 | I 日 | J 冖 | K 仄 | L 冖 | M 曼 |
-| N 曼 | O 口 | P 节 | Q 坦 | R 召 | S 凹 | T 十 | U 口 | V 之 | W 日 | X 艾 | Y 卡* | Z 以 |
+| A 曼 | B 巴 | C 冂 | D 巳 | E 端 | F 岂 | G 町 | H 工 | I 日 | J 冖 | K 否 | L 冖 | M 曼 |
+| N 曼 | O 口 | P 节 | Q 坦* | R 召 | S 凹 | T 十 | U 烹 | V 之 | W 日 | X 艾 | Y 卡* | Z 以 |
 
-\* No character gives a clean Y; 卡 is the closest. The search tools and results are in [`research/`](research/).
+\* No character gives a clean Q or Y; 坦 and 卡 are the closest. The search tools and results are in [`research/`](research/).
 
 ![All 26 letters from their sources](docs/images/alphabet.png)
 
@@ -46,10 +47,10 @@ We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quart
 
 | Style | Capitals | Lowercase |
 |---|---|---|
-| **Tangping Regular** | M N V W X Y Z sit short, as in the original MAN | a narrower, lighter short form of every letter |
-| **Tangping Even** | every capital is tall | a narrower, lighter short form of every letter |
+| **Tangping Regular** | M N V W X Y Z sit short, as in the original MAN | short, with ascenders and descenders |
+| **Tangping Even** | every capital is tall | short, with ascenders and descenders |
 
-Lowercase is the short form, so **case controls the bounce**, and it is narrower and lighter so it never matches a capital. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of M N V W X Y Z in either style.
+Lowercase is drawn in the capitals' stroke weights and stands on the short height, the height of M and N in the original, so **case controls the bounce**. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of M N V W X Y Z in either style.
 
 **Character set:** the full Google Fonts *Latin Core* set (319 characters): Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian and Esperanto, plus ẞ Ł Ħ Ŧ, ordinals, punctuation, € £ ¥ ¢, © ® ™, arrows and 「 」. 380 glyphs in all.
 
@@ -72,7 +73,7 @@ Tangping is a display face: use it large, for headlines, logos, posters and titl
 
 ## Build from source
 
-The fonts are generated from code. Every glyph is assembled from a few stroke primitives in [`sources/build.py`](sources/build.py), which also sets each letter's spacing from its shape, generates the kerning and accents, and hints the result with AFDKO's `otfautohint`. [`scripts/audit.py`](scripts/audit.py) measures spacing, collisions, stroke weights, colour and confusable glyphs.
+The fonts are generated from code. Every glyph is assembled from a few stroke primitives (stems, flared bars, 撇, 捺 and Hei turns) in [`sources/build.py`](sources/build.py), which also sets each letter's spacing from its shape, generates the kerning and accents, and hints the result with AFDKO's `otfautohint`. [`scripts/audit.py`](scripts/audit.py) measures spacing, collisions, stroke weights, colour and confusable glyphs.
 
 ```sh
 python3 -m pip install -r requirements.txt
@@ -113,6 +114,6 @@ Tangping's outlines are new drawings built from stroke rules; the original illus
 
 **创意来自 サイバー環状線（[@CyberKanjousen](https://x.com/CyberKanjousen))** 2026 年 10 月 21 日的帖子：「以防你不知道：曼 从中间劈开就是 MAN！」本项目把这个发现扩展成了一整套字体。
 
-躺平体是一款拉丁字母展示字体：每个字母都是一个"躺平"的黑体汉字。把「曼」逆时针转 90°、再横切掉将近一半，日、罒、又就分别成了 M、A、N。整套字母都按这个规则绘制，而且每个字母都找到了真实的来源汉字（十→T、山→E、凹→S、召→R……）。
+躺平体是一款拉丁字母展示字体：每个字母都是一个"躺平"的黑体汉字。把「曼」逆时针转 90°、再横切掉将近一半，日、罒、又就分别成了 M、A、N。整套字母都按这个规则绘制：横粗竖细、底部平切、撇捺带锋，圆的地方用黑体的转折（九、己、乚）来弯；小写字母与大写同样粗细，站在"矮"的高度上，带上伸和下伸部分。每个字母都找到了真实的来源汉字（十→T、端里的山→E、凹→S、召→R……）。
 
 字体采用 SIL 开源字体许可证 1.1，可免费商用、修改和再分发；构建与研究代码采用 MIT 许可证。分享时请一并注明创意来源 @CyberKanjousen。

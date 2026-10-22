@@ -53,7 +53,7 @@ TL = dict(
 # letter animation, relative to its appearance (cut lands exactly 4 sixteenths later)
 L_APPEAR, L_TURN, L_CUT, L_MORPH = (0, 0.2), (0.2, 0.6), (4 * S16, 4 * S16 + 0.18), (0.9, 1.25)
 TYPE_LINES = [   # (label, style, text, baseline, px, colour, start)
-    ("REGULAR", "REG", "LIE FLAT. STAND TALL.", 420, 150, "INK", bar(7, 0.25)),
+    ("REGULAR", "REG", "Lie flat. Stand tall.", 420, 150, "INK", bar(7, 0.25)),
     ("EVEN", "EVEN", "TURN · CUT · READ", 730, 150, "INK", bar(7, 3)),
     (None, "EVEN", "ÉCRIT · KÖRT · 2026", 900, 90, "MUTED", bar(8, 0)),
 ]

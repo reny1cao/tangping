@@ -106,7 +106,7 @@ p { margin: 0; }
 /* ---------- rules ---------- */
 .section-head { display: grid; gap: 6px; }
 .section-head h2 { font-size: 22px; font-weight: 900; letter-spacing: .02em; }
-.rules { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1.5px solid var(--grid-strong); background: var(--panel); }
+.rules { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1.5px solid var(--grid-strong); background: var(--panel); }
 .rule { padding: 16px 16px 18px; display: grid; gap: 8px; align-content: start; }
 .rule + .rule { border-left: 1px solid var(--grid); }
 .rule .g { font-family: var(--display); font-size: 92px; line-height: 1.1; height: 112px; display: flex; align-items: flex-end; }
@@ -165,6 +165,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rule:nth-child(3) { border-left: 0; }
   .rule:nth-child(n+3) { border-top: 1px solid var(--grid); }
+  .rule:nth-child(5) { border-left: 0; grid-column: span 2; }
   .rule .g { font-size: 72px; height: 92px; }
   .metrics .word { font-size: 150px; }
 }
@@ -210,21 +211,22 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     <div class="chips" id="chips">
       <button type="button">MAN</button>
       <button type="button">LIE FLAT. STAND TALL.</button>
+      <button type="button">Lie flat, stand tall.</button>
       <button type="button">turn · cut · read</button>
       <button type="button">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</button>
       <button type="button">¡OLÉ! ÇA VA? GRÜSSE</button>
       <button type="button">「TANG PING」 躺平 → 2026</button>
     </div>
     <div class="stage">
-      <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">LIE FLAT. STAND TALL.</textarea>
+      <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">Lie flat, stand tall.</textarea>
     </div>
-    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase is a narrower, lighter short form of every letter.</p>
+    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase stands on the short height, with ascenders and descenders.</p>
   </section>
 
   <section aria-labelledby="rules-h" style="display:grid;gap:18px">
     <div class="section-head">
       <span class="label">How it is drawn</span>
-      <h2 id="rules-h">Four rules from one character</h2>
+      <h2 id="rules-h">Five rules from one character</h2>
     </div>
     <div class="rules">
       <div class="rule">
@@ -240,16 +242,22 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         <span class="nums">flat cut · y = 0</span>
       </div>
       <div class="rule">
-        <div class="g">n</div>
+        <div class="g">N</div>
         <h3>撇 down, 捺 up</h3>
         <p>Strokes falling to the right taper like 撇. Strokes rising to the right sweep past the top like 捺.</p>
         <span class="nums">tip +175 over stem</span>
       </div>
       <div class="rule">
+        <div class="g">DS</div>
+        <h3>Curves bend like Hei turns</h3>
+        <p>Where a Latin letter is round, its corners bend the way 九, 己 and 乚 bend. O stays a square 口.</p>
+        <span class="nums">turn radius 130</span>
+      </div>
+      <div class="rule">
         <div class="g">Hh</div>
         <h3>Two heights</h3>
-        <p>Tall and short forms come from wide and narrow parts of the source character.</p>
-        <span class="nums">689 · 527</span>
+        <p>Capitals stand tall. Lowercase stands short, as M and N do in the original, with ascenders and descenders.</p>
+        <span class="nums">689 · 527 · −190</span>
       </div>
     </div>
     <div class="metrics" aria-label="Vertical metrics of MAN in font units">
@@ -265,7 +273,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       <span class="label">Source map</span>
       <h2 id="src-h">Every letter is a real character, turned and cut</h2>
     </div>
-    <p class="note">Each source was found by searching all 6,763 GB2312 characters in a bold Hei font: turn a quarter-turn, then cut straight across, at most half. The score compares the cut piece with the Tangping letter (1.00 is identical). Y has no clean source; 卡 is the closest. C, E, F, H, K, R and T were redrawn to follow their sources: 冂's hook, 山's long middle arm, 工's short left stroke, 刀's curved leg, 十's wide bar.</p>
+    <p class="note">Each source was found by searching all 6,763 GB2312 characters in a bold Hei font: turn a quarter-turn, then cut straight across, at most half. The score compares the cut piece with the Tangping letter (1.00 is identical). Y has no clean source; 卡 is the closest, and Q's tail has none. E is the 山 inside 端, K is the 不 inside 否, and U is the 口 inside 烹.</p>
     <div class="legend"><span><i class="k1"></i>turned character</span><span><i class="k2"></i>kept piece</span><span><i class="k3"></i>cut</span></div>
     <div class="sources" id="sources"></div>
   </section>
@@ -283,7 +291,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   <footer>
     <span class="files">Tangping-Regular.otf · Tangping-Even.otf · .woff2 for the web</span>
-    <span>Version 3.200. Google Fonts Latin Core (319 characters: Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian, Esperanto) plus combining accents, kerning and hinting. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
+    <span>Version 4.000. Google Fonts Latin Core (319 characters: Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian, Esperanto) plus combining accents, kerning and hinting. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
   </footer>
 </div>
 
@@ -313,8 +321,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     btnEven.setAttribute('aria-pressed', String(even));
     root.style.setProperty('--display', (even ? '"Tangping Even"' : '"Tangping Regular"') + ', "Noto Sans SC", sans-serif');
     note.textContent = even
-      ? 'Even: every capital is tall. Lowercase is a narrower, lighter short form, so case controls the bounce.'
-      : 'Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase is a narrower, lighter short form of every letter.';
+      ? 'Even: every capital is tall. Lowercase stands on the short height, with ascenders and descenders.'
+      : 'Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase stands on the short height, with ascenders and descenders.';
     requestAnimationFrame(fit);
   }
 

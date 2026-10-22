@@ -17,10 +17,10 @@ def specimen(path):
     ctx.set_source_rgb(*mv.PAPER); ctx.paint()
     rows = [   # (label, face, text, px, colour)
         ("TANGPING EVEN", mv.EVEN, "TURN · CUT · READ", 150, mv.INK),
-        ("TANGPING REGULAR", mv.REG, "LIE FLAT. STAND TALL.", 118, mv.INK),
+        ("TANGPING REGULAR", mv.REG, "Lie flat, stand tall.", 118, mv.INK),
         ("TYPED MAN IN REGULAR, AS IN THE ORIGINAL IMAGE", mv.REG, "MAN", 150, mv.INK),
-        ("ACCENTS AND FIGURES", mv.EVEN, "ŁÓDŹ · ÁRVÍZTŰRŐ · ŞIŞLI · 2026", 92, mv.INK),
-        ("PANGRAM", mv.EVEN, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", 46, mv.MUTED),
+        ("ACCENTS AND FIGURES", mv.EVEN, "Łódź · Árvíztűrő · Şişli · 2026", 92, mv.INK),
+        ("PANGRAM", mv.EVEN, "The quick brown fox jumps over the lazy dog. SPHINX OF BLACK QUARTZ.", 46, mv.MUTED),
     ]
     y = 70
     for lab, face, text, px, rgb in rows:
@@ -31,8 +31,14 @@ def specimen(path):
     surf.write_to_png(path)
 
 
-def frame(t, path):
-    mv.frame(t).write_to_png(path)
+def frame(t, path, width=1600):
+    """a frame of the motion piece, scaled down for the README"""
+    src = mv.frame(t)
+    k = width / src.get_width()
+    out = cairo.ImageSurface(cairo.FORMAT_RGB24, width, round(src.get_height() * k))
+    ctx = cairo.Context(out)
+    ctx.scale(k, k); ctx.set_source_surface(src); ctx.get_source().set_filter(cairo.FILTER_BEST); ctx.paint()
+    out.write_to_png(path)
 
 
 if __name__ == "__main__":
