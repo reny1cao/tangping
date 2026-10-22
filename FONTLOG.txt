@@ -42,6 +42,11 @@ not part of this font and is not redistributed here.
 ChangeLog
 ---------
 
+22 October 2026 (The Tangping Project Authors) Tangping v4.100
+- Fixes from an independent review: filled counters in accented letters (now
+  checked at build time); tall M N V W X Y Z before lowercase in Regular (calt);
+  new quotes, &, ß ẞ § £ ð Þ ¿; accent placement; kerning; tighter Hei turns.
+
 22 October 2026 (The Tangping Project Authors) Tangping v4.000
 - Redesign: Hei turns replace chamfers, notches and hooks; a real lowercase with
   ascenders and descenders in the capitals' stroke weights; tapering 撇 diagonals;

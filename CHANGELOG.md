@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.100 — 2026-10-22
+Fixes from an independent review of 4.000.
+- **Counters:** accented letters built on a letter with Hei turns (á é ğ Ď Ř æ œ Ð đ …) had their counters filled in. Fixed, and the build now refuses any accented letter with fewer counters than its base.
+- **Sentence case in Regular:** M N V W X Y Z stay short in all-caps (MAN, NASA) but stand tall before lowercase (`calt`), so "Mozart", "Wien" and "Zürich" no longer read as lowercase.
+- **Glyphs that read wrong:** opening quotes are now the closing quotes turned 180°; a new & built from a loop, a 撇 and a 捺 (no longer "Et"); ß and ẞ with an open lower turn; § as hook, ring, hook; £ with an f-like turn; ð with a hooked ascender, distinct from đ; Þ with P's bowl; ¿ is ? turned.
+- **Accents:** cedilla joined to its stem; side carons on ď ľ Ľ ť clear of the stem, with their own spacing; a larger ring; a wave tilde; Y X V and lowercase v x anchors moved clear of the rising 捺; ASCII grave at the height of the other marks; square i/j dots.
+- **Kerning:** closest approach is now measured with 20 units of vertical slack, so a hyphen no longer slides over J's spur or z's foot; braces are kerned like brackets.
+- **Shapes:** tighter Hei turns (radius 95, was 130); bar-end flares 3 units, flush with the stems as in the reference; heavier lowercase bars (126) with larger a and e counters; S terminals pulled in (not 5); a smaller waist step on 8; clean joints on K, k, Y and R.
+
 ## 4.000 — 2026-10-22
 A redesign, because the alphabet did not live up to the original MAN.
 - **Hei turns instead of gimmicks.** Where a Latin letter is round, its corners bend the way 九, 己 and 乚 bend in a bold Hei font: B C D G J P R S U, 0 2 3 5 6 8 9, the lowercase bowls, ( ) { } ? @ € § © ®. O stays a square 口. The 45° chamfers (D, 5, ẞ), the dotted zero, the notched H, and the hooks on C and R are gone; D, O and 0, B and 8, and S, 5 and 2 are now told apart by their turns.

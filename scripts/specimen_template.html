@@ -220,7 +220,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     <div class="stage">
       <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">Lie flat, stand tall.</textarea>
     </div>
-    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase stands on the short height, with ascenders and descenders.</p>
+    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short in all-caps, so MAN matches the original, and stand tall before lowercase. Lowercase stands on the short height, with ascenders and descenders.</p>
   </section>
 
   <section aria-labelledby="rules-h" style="display:grid;gap:18px">
@@ -291,7 +291,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   <footer>
     <span class="files">Tangping-Regular.otf · Tangping-Even.otf · .woff2 for the web</span>
-    <span>Version 4.000. Google Fonts Latin Core (319 characters: Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian, Esperanto) plus combining accents, kerning and hinting. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
+    <span>Version 4.100. Google Fonts Latin Core (319 characters: Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian, Esperanto) plus combining accents, kerning and hinting. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
   </footer>
 </div>
 
@@ -322,7 +322,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     root.style.setProperty('--display', (even ? '"Tangping Even"' : '"Tangping Regular"') + ', "Noto Sans SC", sans-serif');
     note.textContent = even
       ? 'Even: every capital is tall. Lowercase stands on the short height, with ascenders and descenders.'
-      : 'Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase stands on the short height, with ascenders and descenders.';
+      : 'Regular: M N V W X Y Z capitals sit short in all-caps, so MAN matches the original, and stand tall before lowercase. Lowercase stands on the short height, with ascenders and descenders.';
     requestAnimationFrame(fit);
   }
 

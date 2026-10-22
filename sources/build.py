@@ -26,7 +26,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
-VERSION = "4.000"
+VERSION = "4.100"
 COPYRIGHT = "Copyright 2026 The Tangping Project Authors (https://github.com/reny1cao/tangping)"
 DESIGNER = "Rocco × Claude"
 PROJECT_URL = "https://github.com/reny1cao/tangping"
@@ -37,7 +37,7 @@ SB = 43
 W2 = 2 * S + C                 # 340
 LOWCAPS = set("MNVWXYZ")       # capitals that sit low in Regular
 DESC = -190
-RO, RI = 130, 40               # Hei turn radii (outer, counter)
+RO, RI = 95, 30                # Hei turn radii (outer, counter)
 
 
 def bi(h):
@@ -81,14 +81,17 @@ class Shape:
         return self
 
     def baked(self):
-        """the resolved outline (union minus cuts) as plain contours"""
-        out = Shape()
+        """the resolved outline (union minus cuts) as ONE compound contour, so its counters
+        stay holes when it is unioned with other strokes"""
+        ops = []
         for segs in _contours(resolve(self)):
             if not segs:
                 continue
-            ops = [("M", segs[0][1][0])]
+            ops.append(("M", segs[0][1][0]))
             for kind, P in segs:
                 ops.append(("L", P[1]) if kind == "L" else ("C", P[1], P[2], P[3]))
+        out = Shape()
+        if ops:
             out.contours.append(ops)
         return out
 
@@ -96,10 +99,13 @@ class Shape:
 def to_path(contour, dx=0):
     p = pathops.Path()
     pen = p.getPen()
+    started = False
     for op in contour:
         pts = [(q[0] + dx, q[1]) for q in op[1:]]
-        if op[0] == "M":
-            pen.moveTo(pts[0])
+        if op[0] == "M":                  # a compound contour holds several sub-paths
+            if started:
+                pen.closePath()
+            pen.moveTo(pts[0]); started = True
         elif op[0] == "L":
             pen.lineTo(pts[0])
         elif op[0] == "C":
@@ -120,7 +126,7 @@ def bar(sh, x0, x1, y0, y1, top=False, bot=False, fl=True, fr=True):
     """Bar = rotated Hei vertical. Exposed long edge is concave, corners flare."""
     L = x1 - x0
     sag = 0.022 * L
-    f, k = 6, 28
+    f, k = 3, 28
     ops = []
     if bot:
         xl, xr = x0 - (f if fl else 0), x1 + (f if fr else 0)
@@ -339,7 +345,7 @@ def _J(h):            # 亅
 def _K(h):            # 大 lying down
     s = Shape()
     stem(s, 0, 0, h)
-    sweep(s, 70, round(h * 0.40), round(h * 0.58), 290, 405)
+    sweep(s, 70, round(h * 0.40), round(h * 0.46), 290, 405)   # leg root meets the arm cleanly
     tip = h + (round(h * 0.1) if h > 600 else over(h) - 60)
     na(s, 70, round(h * 0.42), 320, tip, wb=124, wt=118, tipdrop=56)
     return s
@@ -421,14 +427,17 @@ def _Q(h):
 
 @letter("R", 390)
 def _R(h):
-    s = Shape(); t = bi(h)
+    bowl = Shape(); t = bi(h)
     mid = round(h * 0.40)
-    stem(s, 0, 0, h)
-    tbar(s, 0, W2, h, fr=False)
-    stem(s, 240, mid, h - B + 1)
-    xbar(s, 0, W2 - 60, mid, t)
-    bend(s, W2, h, 1, 1); bend(s, W2, mid + 2, 1, -1, ri=0)
-    sweep(s, 100, mid - 2, mid + t, 270, 390)
+    stem(bowl, 0, 0, h)
+    tbar(bowl, 0, W2, h, fr=False)
+    stem(bowl, 240, mid, h - B + 1)
+    xbar(bowl, 0, W2, mid, t)
+    bend(bowl, W2, h, 1, 1); bend(bowl, W2, mid, 1, -1, tb=t)
+    s = Shape().add(bowl)               # the leg is a 撇 leaving the bowl's foot
+    s.raw([("M", (100, mid + 1)),
+           ("C", (175, mid * 0.80), (250, mid * 0.42), (268, 0)), ("L", (388, 0)),
+           ("C", (378, mid * 0.45), (335, mid * 0.85), (252, mid + 1))])
     return s
 
 
@@ -436,11 +445,11 @@ def _R(h):
 def _S(h):
     s = Shape(); t = bi(h)
     mid = round((h - t) / 2)
-    tbar(s, 0, W2, h, fl=False)
+    tbar(s, 0, 315, h, fl=False)
     stem(s, 0, mid, h - B + 1)
     xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
-    bbar(s, 0, W2, fr=False)
+    bbar(s, 25, W2, fr=False)
     bend(s, 0, h, -1, 1); bend(s, 0, mid, -1, -1, tb=t)
     bend(s, W2, mid + t, 1, 1, tb=t); bend(s, W2, 0, 1, -1)
     return s
@@ -490,8 +499,8 @@ def _Y(h):
     s = Shape()
     jy = round(h * 0.46)
     pie_c(s, 0, h, 150, jy - 6, wt=122, wb=112, bow=0.05)
-    na(s, 140, jy - 40, 350, h + over(h), wb=122, wt=118, tipdrop=55)
-    stem(s, 150, 0, jy + 20, w=108)
+    na(s, 150, jy - 40, 350, h + over(h), wb=112, wt=118, tipdrop=55)
+    stem(s, 150, 0, jy + 60, w=112)       # the stem runs up into the crotch, so no notch shows
     return s
 
 
@@ -505,7 +514,7 @@ def _Z(h):
 
 # ================================================================ lowercase (x-height 527, ascenders 689, descenders -190)
 XH, ASC, DSC = LOW, TALL, DESC
-LB, LI = 124, 104                     # lowercase outer and inner bars
+LB, LI = 126, 92                      # lowercase outer and inner bars
 LC_ = {}
 
 
@@ -521,8 +530,8 @@ def _la():
     s = Shape()
     tbar(s, 0, 320, XH, t=LB, fr=False)
     stem(s, 220, 0, XH - LB + 1)
-    xbar(s, 0, 320, 205, LI)
-    stem(s, 0, 0, 205 + LI)
+    xbar(s, 0, 320, 236, LI)
+    stem(s, 0, 0, 236 + LI)
     bbar(s, 0, 320, t=LB, fr=False)
     bend(s, 320, XH, 1, 1, tb=LB)
     return s
@@ -564,8 +573,8 @@ def _le(left_round=True):
     s = Shape()
     stem(s, 0, 0, XH)
     tbar(s, 0, 320, XH, t=LB, fl=False, fr=False)
-    stem(s, 220, 225, XH - LB + 1)
-    xbar(s, 0, 320, 225, LI)
+    stem(s, 220, 204, XH - LB + 1)
+    xbar(s, 0, 320, 204, LI)
     bbar(s, 0, 300, t=LB, fl=False)
     bend(s, 320, XH, 1, 1, tb=LB)
     if left_round:
@@ -624,7 +633,7 @@ def _lj():
 def _lk():
     s = Shape()
     stem(s, 0, 0, ASC)
-    sweep(s, 70, round(XH * 0.36), round(XH * 0.56), 280, 395)
+    sweep(s, 70, round(XH * 0.36), round(XH * 0.46), 280, 395)
     na(s, 70, round(XH * 0.40), 300, XH + 70, wb=118, wt=112, tipdrop=52)
     return s
 
@@ -719,7 +728,7 @@ def _lu():
     return s
 
 
-@lower("v", 440, top_x=330)
+@lower("v", 440, top_x=170)
 def _lv():            # the 捺 tip barely clears the x-height, so v never reads as a capital
     return n_shape(Shape(), XH, with_stem=False, ko=0.16).transformed(0.82, 1.0)
 
@@ -733,7 +742,7 @@ def _lw():
     return s
 
 
-@lower("x", 470)
+@lower("x", 470, top_x=150)
 def _lx():
     s = Shape()
     pie_c(s, 0, XH, 270, 0, wt=116, wb=100, bow=0.05)
@@ -864,9 +873,9 @@ def _8(h):
     stem(s, 0, 0, mid + t); stem(s, 240, 0, mid + t)
     bbar(s, 0, W2, fl=False, fr=False)
     xbar(s, 0, W2, mid, t)
-    stem(s, 30, mid, h); stem(s, 210, mid, h)
-    tbar(s, 30, 310, h, fl=False, fr=False)
-    bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1); bend(s, 30, h, -1, 1); bend(s, 310, h, 1, 1)
+    stem(s, 18, mid, h); stem(s, 222, mid, h)
+    tbar(s, 18, 322, h, fl=False, fr=False)
+    bend(s, 0, 0, -1, -1); bend(s, W2, 0, 1, -1); bend(s, 18, h, -1, 1); bend(s, 322, h, 1, 1)
     return s
 
 
@@ -959,13 +968,8 @@ def question(s, dy=0, flip=False):
     stem(pts, 110, 200, 331)
     sq(pts, 101, 0)
     bend(pts, 320, T, 1, 1); bend(pts, 320, 330, 1, -1, tb=112)
-    if flip:   # rotate 180° about (160, T/2) and drop below
-        for c in pts.contours:
-            nc = []
-            for op in c:
-                nc.append((op[0],) + tuple((320 - p[0], T - p[1] + dy) for p in op[1:]))
-            s.contours.append(nc)
-        return s
+    if flip:   # turn 180° about (160, T/2), turns and all, and drop below
+        return s.add(pts.baked().transformed(-1, -1, 320, T + dy))
     return s.add(pts, 0, dy)
 
 
@@ -998,8 +1002,13 @@ def tick(s, x, y, up=False):
     return s
 
 
+def tick_open(s, x, ytop):
+    """an opening quote: the closing quote turned 180°, wide end at the bottom"""
+    return s.add(tick(Shape(), 0, ytop - 118).transformed(-1, -1, 118, 2 * ytop - 238), dx=x)
+
+
 @sym("quoteleft", "‘", 118)
-def _ql(): return tick(Shape(), 0, T - 250, up=True)
+def _ql(): return tick_open(Shape(), 0, T)
 
 
 @sym("quoteright", "’", 118)
@@ -1011,7 +1020,7 @@ def _qsb(): return tick(Shape(), 0, 0)
 
 
 @sym("quotedblleft", "“", 290)
-def _qdl(): return tick(tick(Shape(), 0, T - 250, up=True), 172, T - 250, up=True)
+def _qdl(): return tick_open(tick_open(Shape(), 0, T), 172, T)
 
 
 @sym("quotedblright", "”", 290)
@@ -1193,7 +1202,7 @@ def _tilde():
 
 
 @sym("grave", "`", 200)
-def _grv(): return Shape().poly((0, T), (110, T), (200, T - 170), (100, T - 170))
+def _grv(): return acc_grave(Shape(), 105, LOW + 60)        # at the height of the other spacing marks
 
 
 @sym("asterisk", "*", 340)
@@ -1226,15 +1235,17 @@ def _at():
     return s
 
 
-@sym("ampersand", "&", 560)
-def _amp():           # "Et": an E with a t-stem through its arm
+@sym("ampersand", "&", 525)
+def _amp():           # a small loop; a 撇 falls from it across the bowl; a 捺 rises from the foot
     s = Shape()
-    stem(s, 0, 0, T)
-    tbar(s, 0, 270, T)
-    bbar(s, 0, 300, fr=False)
-    xbar(s, 0, 560, 300)
-    stem(s, 330, 0, 560)
-    xbar(s, 330, 470, 0, 110)
+    stem(s, 40, 400, T); stem(s, 200, 470, T)
+    tbar(s, 40, 300, T, fl=False, fr=False)
+    bend(s, 40, T, -1, 1); bend(s, 300, T, 1, 1)
+    pie_c(s, 40, 470, 360, 0, wt=135, wb=120, bow=0.03)
+    stem(s, 0, 0, 360)
+    bbar(s, 0, 300, fl=False, fr=False)
+    bend(s, 0, 0, -1, -1)
+    na(s, 262, 0, 430, 400, wb=110, wt=105, tipdrop=45)
     return s
 
 
@@ -1255,8 +1266,9 @@ def _cent():
 def _pound():
     s = Shape()
     stem(s, 60, 0, T)
-    tbar(s, 60, 360, T)
-    xbar(s, 0, 300, 250)
+    tbar(s, 60, 360, T, fl=False)
+    bend(s, 60, T, -1, 1, 150, 45)
+    xbar(s, 0, 290, 290, 112)
     bbar(s, 0, 380)
     return s
 
@@ -1288,16 +1300,16 @@ def _pct():
     return s
 
 
-@sym("section", "§", W2)
-def _sect():
-    s = Shape()
-    tbar(s, 0, W2, T + 40, fl=False)
-    stem(s, 0, 300, T - 90)
-    box(s, 0, 160, W2, 520, tb=100, top=False, bot=False)
-    stem(s, 240, 20, 260)
-    bbar(s, 0, W2, y=-110, fr=False)
-    bend(s, 0, T + 40, -1, 1); bend(s, W2, -110, 1, -1)
-    bend(s, W2, 520, 1, 1, 110, 30, tb=100); bend(s, 0, 160, -1, -1, 110, 30, tb=100)
+@sym("section", "§", 300)
+def _sect():           # a hook, a ring, a hook: two S turns linked through the ring
+    s = Shape(); W = 300
+    tbar(s, 0, W, T, t=120, fl=False)
+    stem(s, 0, 460, T)
+    box(s, 0, 170, W, 470, tb=100)
+    stem(s, W - 100, -60, 180)
+    bbar(s, 0, W, y=-60, t=120, fr=False)
+    bend(s, 0, T, -1, 1, tb=120); bend(s, W, -60, 1, -1, tb=120)
+    bend(s, W, 470, 1, 1, 80, 20, tb=100); bend(s, 0, 170, -1, -1, 80, 20, tb=100)
     return s
 
 
@@ -1413,16 +1425,18 @@ def acc_dier(s, cx, y):
     sq(s, cx - 148, y, 112); return sq(s, cx + 36, y, 112)
 
 
-def acc_ring(s, cx, y):
-    stem(s, cx - 110, y, y + 200, w=88); stem(s, cx + 22, y, y + 200, w=88)
-    rect(s, cx - 110, y, cx + 110, y + 84); rect(s, cx - 110, y + 116, cx + 110, y + 200)
+def acc_ring(s, cx, y):              # a small 口 with an open counter
+    stem(s, cx - 125, y, y + 220, w=82); stem(s, cx + 43, y, y + 220, w=82)
+    rect(s, cx - 125, y, cx + 125, y + 82); rect(s, cx - 125, y + 138, cx + 125, y + 220)
     return s
 
 
-def acc_tilde(s, cx, y):
-    rect(s, cx - 180, y + 30, cx - 90, y + 150); rect(s, cx - 180, y + 60, cx + 10, y + 150)
-    rect(s, cx - 10, y, cx + 180, y + 90); rect(s, cx + 90, y, cx + 180, y + 120)
-    return s
+def acc_tilde(s, cx, y):             # one wave: up, down, up, as a band of even vertical thickness
+    import math
+    n, w, a, t = 24, 160, 40, 84
+    mid = [(cx - w + 2 * w * i / n, y + t / 2 + a + a * math.sin(math.pi * (-0.25 + 2.5 * i / n)))
+           for i in range(n + 1)]
+    return s.poly(*([(x, yy + t / 2) for x, yy in mid] + [(x, yy - t / 2) for x, yy in reversed(mid)]))
 
 
 def acc_macron(s, cx, y):
@@ -1444,8 +1458,8 @@ def acc_hung(s, cx, y):
     return s
 
 
-def acc_cedilla(s, cx, y=0):
-    stem(s, cx - 40, -80, 10, w=90)
+def acc_cedilla(s, cx, y=0):        # drops from the letter and turns left
+    stem(s, cx - 40, -200, 10, w=90)
     return rect(s, cx - 150, -200, cx + 50, -110)
 
 
@@ -1474,11 +1488,11 @@ SPACING_MARKS = {0xA8: "dieresis", 0xAF: "macron", 0xB4: "acute", 0xB8: "cedilla
                  0x2C7: "caron", 0x2D8: "breve", 0x2D9: "dotaccent", 0x2DA: "ring", 0x2DB: "ogonek",
                  0x2DC: "tilde", 0x2DD: "hungarumlaut"}
 GAP = {"ring": 30}                  # distance between the letter and a top mark (default 60)
-TOP_X = {"N": 160, "Y": 175, "W": 243, "K": 150, "L": 70, "R": 165}    # off-centre top anchors
+TOP_X = {"N": 160, "Y": 130, "W": 243, "K": 150, "L": 70, "R": 165, "X": 160, "V": 190}    # off-centre top anchors
 BOTTOM_X = {"N": 185, "K": 165}
 OGONEK_X = {"A": 290, "E": 240, "I": 220, "U": 290}
 COMMA_BELOW = set("ĢģĶķĻļŅņŖŗ")     # Latvian: comma below, though Unicode decomposes to cedilla
-SIDE_CARON = {"Ľ": (125, TALL), "ľ": (125, TALL), "ď": (345, TALL), "ť": (185, 640)}
+SIDE_CARON = {"Ľ": (185, TALL), "ľ": (185, TALL), "ď": (405, TALL), "ť": (250, 760)}
 SIDE_CARON_CH = set(SIDE_CARON)
 MARK_X = -(SB + 170)                # combining marks sit over the preceding letter by default
 
@@ -1576,7 +1590,7 @@ def collect(style):
         shape, w, h, an = letter_record(c, LOW, True)
         if c in "ij":                       # 点 on i and j; dotless forms for marks above
             dotless = Shape().add(shape)
-            shape = Shape().add(shape); rect(shape, DOT_X[c] - 52, XH + 78, DOT_X[c] + 52, XH + 174)
+            shape = Shape().add(shape); rect(shape, DOT_X[c] - 52, XH + 72, DOT_X[c] + 52, XH + 176)
             dname = "dotlessi" if c == "i" else glyph_name("ȷ")
             base[dname] = (dotless, w, h, an)
             G.append(Glyph(dname, "ı" if c == "i" else "ȷ", dotless, "letter", w, h, space_key=c, kern_key=c, anchors=an))
@@ -1596,12 +1610,16 @@ def collect(style):
         if lower and b in "ij" and mark in TOP_MARKS:
             bkey = "dotlessi" if b == "i" else glyph_name("ȷ")
         shape, w, h, an = base[bkey]
-        G.append(Glyph(name, ch, with_mark(shape, mark, an, h, ch), "letter", w, h,
-                       space_key=b, kern_key=b + "_m", anchors=an))
+        g = Glyph(name, ch, with_mark(shape, mark, an, h, ch), "letter", w, h,
+                  space_key=name if mark == "caronside" else b, kern_key=b + "_m", anchors=an)
+        g.base = bkey
+        G.append(g)
         if not lower and b in LOWCAPS:
             shape, w, h, an = base[b + ".ss01"]
-            G.append(Glyph(name + ".ss01", "", with_mark(shape, mark, an, h, ch), "letter", w, h,
-                           space_key=b, kern_key=b + "_alt_m", anchors=an))
+            g = Glyph(name + ".ss01", "", with_mark(shape, mark, an, h, ch), "letter", w, h,
+                      space_key=b, kern_key=b + "_alt_m", anchors=an)
+            g.base = b + ".ss01"
+            G.append(g)
 
     # --- letters that are not base + mark
     def special(ch, sh, w, space_key=None):
@@ -1633,11 +1651,13 @@ def collect(style):
     special("Ð", eth, W2 + 80); special("Đ", Shape().add(eth), W2 + 80)
     d_bar = Shape().add(_ld()); xbar(d_bar, 130, 400, 575, 90)
     special("đ", d_bar, 400)
-    eth_l = Shape().add(_ld()); xbar(eth_l, 110, 380, 575, 90)
-    special("ð", eth_l, 380)
-    thorn = Shape(); t = bi(TALL); stem(thorn, 0, 0, TALL)
-    lo, hi = round(TALL * 0.16), round(TALL * 0.7)
+    eth_l = Shape().add(_ld()); tbar(eth_l, 90, 320, ASC, t=110, fl=False, fr=False)
+    bend(eth_l, 320, ASC, 1, 1, tb=110)
+    special("ð", eth_l, 320)
+    thorn = Shape(); t = 122; stem(thorn, 0, 0, TALL)
+    lo, hi = round(TALL * 0.15), round(TALL * 0.76)
     xbar(thorn, 0, W2, lo, t); xbar(thorn, 0, W2, hi - t, t); stem(thorn, 240, lo, hi)
+    bend(thorn, W2, hi, 1, 1, tb=t); bend(thorn, W2, lo, 1, -1, tb=t)
     special("Þ", thorn, W2)
     th = Shape(); stem(th, 0, DSC, ASC); xbar(th, 0, 320, XH - LB, LB); stem(th, 220, 0, XH); xbar(th, 0, 320, 0, LB)
     bend(th, 320, XH, 1, 1, tb=LB); bend(th, 320, 0, 1, -1, tb=LB)
@@ -1654,15 +1674,16 @@ def collect(style):
     special("Ŧ", tb_, 480, space_key="T")
     tb_ = _lt(); xbar(tb_, 0, 270, 250, 90)
     special("ŧ", tb_, 270, space_key="t")
-    s = Shape(); mid = 300                                        # ß: a narrow upper turn over an open lower one
-    stem(s, 0, 0, ASC); tbar(s, 0, 290, ASC, t=LB, fl=False, fr=False); stem(s, 190, mid + LI - 1, ASC - LB + 1)
-    xbar(s, 0, 320, mid, LI); stem(s, 220, LB - 1, mid + 1); bbar(s, 150, 320, t=LB, fr=False)
-    bend(s, 0, ASC, -1, 1, tb=LB); bend(s, 290, ASC, 1, 1, tb=LB); bend(s, 320, mid + LI, 1, 1, tb=LI); bend(s, 320, 0, 1, -1, tb=LB)
+    s = Shape(); mid = 300                                        # ß: an upper turn, then an open 3
+    stem(s, 0, 0, ASC); tbar(s, 0, 290, ASC, t=LB, fr=False); stem(s, 190, mid + LI - 1, ASC - LB + 1)
+    xbar(s, 150, 320, mid, LI); stem(s, 220, LB - 1, mid + 1); bbar(s, 150, 320, t=LB, fr=False)
+    bend(s, 290, ASC, 1, 1, tb=LB); bend(s, 320, mid + LI, 1, 1, tb=LI); bend(s, 320, 0, 1, -1, tb=LB)
     G.append(Glyph("germandbls", "ß", s, "letter", 320, LOW))
-    s = Shape(); t = bi(TALL); mid = 300                          # ẞ: the same turns, capital size
-    stem(s, 0, 0, TALL); tbar(s, 0, 310, TALL, fr=False); stem(s, 210, mid + t - 1, TALL - B + 1)
-    xbar(s, 0, W2, mid, t); stem(s, 240, B - 1, mid + 1); bbar(s, 160, W2, fr=False)
-    bend(s, 310, TALL, 1, 1); bend(s, W2, mid + t, 1, 1, tb=t); bend(s, W2, 0, 1, -1)
+    s = Shape(); t = bi(TALL); mid = 290                          # ẞ: square top, a falling stroke, an open 3
+    stem(s, 0, 0, TALL); tbar(s, 0, W2, TALL, fr=False)
+    s.poly((W2 - 125, TALL - B + 1), (W2, TALL - B + 1), (W2 - 65, mid + t), (W2 - 190, mid + t))
+    xbar(s, 150, W2, mid, t); stem(s, 240, B - 1, mid + 1); bbar(s, 150, W2, fr=False)
+    bend(s, W2, mid + t, 1, 1, tb=t); bend(s, W2, 0, 1, -1)
     G.append(Glyph(glyph_name("ẞ"), "ẞ", s, "letter", W2, TALL))
     for ch, fn in (("ª", _A), ("º", _O)):                       # ordinals: raised small letter, underlined
         s = fn(TALL).transformed(0.48, 0.48, 0, 340); xbar(s, 0, W2 * 0.48, 250, 60)
@@ -1709,17 +1730,25 @@ class RoundPen:
 
 
 def _union(paths):
+    """union of simple contours; OpBuilder is fast but fills counters inside a compound
+    contour, so compound ones (baked shapes) are merged afterwards with pathops.op"""
+    n_sub = [sum(1 for _ in q.contours) for q in paths]
+    simple = [q for q, n in zip(paths, n_sub) if n <= 1]
+    compound = [q for q, n in zip(paths, n_sub) if n > 1]
     try:
         b = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
-        for q in paths:
+        for q in simple:
             b.add(q, pathops.PathOp.UNION)
-        return b.resolve()
+        acc = b.resolve()
     except pathops.PathOpsError:               # coincident edges: merge one contour at a time
         acc = pathops.Path()
-        for q in paths:
+        for q in simple:
             acc = pathops.op(acc, pathops.simplify(q, fix_winding=True), pathops.PathOp.UNION,
                              fix_winding=True, keep_starting_points=False)
-        return acc
+    for q in compound:
+        acc = pathops.op(acc, pathops.simplify(q, fix_winding=True), pathops.PathOp.UNION,
+                         fix_winding=True, keep_starting_points=False)
+    return acc
 
 
 def resolve(shape, dx=0):
@@ -1864,7 +1893,8 @@ def side_bearings(path, h, T, k=0.2, D=160, sbmin=8):
 PUNCT_KERN = ["period", "comma", "colon", "semicolon", "ellipsis", "exclam", "question", "hyphen", "endash",
               "emdash", "quotesingle", "quotedbl", "quoteleft", "quoteright", "quotedblleft", "quotedblright",
               "quotesinglbase", "quotedblbase", "parenleft", "parenright", "bracketleft", "bracketright",
-              "guillemotleft", "guillemotright", "guilsinglleft", "guilsinglright", "slash", "ampersand"]
+              "guillemotleft", "guillemotright", "guilsinglleft", "guilsinglright", "slash", "ampersand",
+              "braceleft", "braceright"]
 
 
 def auto_kerning(glyphs, paths, adv, min_gap=45):
@@ -1889,18 +1919,33 @@ def auto_kerning(glyphs, paths, adv, min_gap=45):
                 if b: lo, hi = min(lo, b[1]), max(hi, b[3])
         T = 40 if members[0].kind == "letter" and members[0].h <= LOW and key.islower() else 43
         prof[key] = (L, Rg, lo, hi, T)
+    def spread(a, r=4):                 # nearest ink within ±r rows (5 units each)
+        out = a.copy()
+        for k in range(1, r + 1):
+            up = np.full_like(a, np.nan); up[k:] = a[:-k]
+            dn = np.full_like(a, np.nan); dn[:-k] = a[k:]
+            out = np.fmin(out, np.fmin(up, dn))
+        return out
+
+    spread_prof = {k: (spread(v[0]), spread(v[1])) for k, v in prof.items()}
     pairs = []
     keys = list(prof)
     for a in keys:
         La, Ra, loa, hia, Ta = prof[a]
+        Ra_s = spread_prof[a][1]
         for b in keys:
             if a in PUNCT_KERN and b in PUNCT_KERN:
                 continue
             Lb, Rb, lob, hib, Tb = prof[b]
-            both = ~np.isnan(Ra) & ~np.isnan(Lb)
-            if not both.any():
+            Lb_s = spread_prof[b][0]
+            gaps = []
+            for r_, l_ in ((Ra, Lb_s), (Ra_s, Lb)):
+                both = ~np.isnan(r_) & ~np.isnan(l_)
+                if both.any():
+                    gaps.append(float(np.min(r_[both] + l_[both])))
+            if not gaps:
                 continue
-            raw_min = float(np.min(Ra[both] + Lb[both]))     # closest approach of the two inks
+            raw_min = min(gaps)                                 # closest approach, with vertical slack
             ref = Ta + Tb                                       # the H|H gap
             slack = raw_min - ref
             if slack > 0.4 * ref:                              # interlocking shapes (LT, Ta, T.): close up
@@ -1954,13 +1999,39 @@ def features(glyphs, by_key, pairs, anchors, style):
     for a in alts:
         out.append(f"  sub {a[:-5]} by {a};")
     out.append("} ss01;")
+    if style == "Regular":
+        # the short capitals belong to all-caps setting (MAN); before lowercase they stand tall,
+        # so sentence case never reads as lowercase
+        lower = sorted({g.name for g in glyphs if g.kind == "letter" and g.unis and g.unis[0].islower()})
+        shorts = [a[:-5] for a in alts]
+        out.append(f"@LOWER = [{' '.join(lower)}];")
+        out.append(f"@SHORTCAP = [{' '.join(shorts)}];\n@TALLCAP = [{' '.join(alts)}];")
+        out.append("feature calt {\n  lookupflag IgnoreMarks;\n  sub @SHORTCAP' @LOWER by @TALLCAP;\n} calt;")
     return "\n".join(out)
 
 
 # ================================================================ build
+def holes(path):
+    """number of counters: contours wound against the largest one"""
+    areas = []
+    for segs in _contours(path):
+        a = 0.0
+        for kind, P in segs:
+            a += P[0][0] * P[-1][1] - P[-1][0] * P[0][1]
+        areas.append(a)
+    if not areas:
+        return 0
+    big = max(areas, key=abs)
+    return sum(1 for a in areas if a * big < 0)
+
+
 def build(style, out):
     glyphs = collect(style)
     paths0 = {g.name: resolve(g.shape) for g in glyphs}
+    for g in glyphs:                    # an accent must never fill a counter of its base letter
+        b = getattr(g, "base", None)
+        if b and holes(paths0[g.name]) < holes(paths0[b]):
+            raise ValueError(f"{g.name} has fewer counters than {b}")
 
     # spacing: per spacing key (a letter and all its accented forms share one)
     spacing = {}
