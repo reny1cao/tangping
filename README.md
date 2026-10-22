@@ -78,7 +78,7 @@ make            # fonts → fonts/otf + fonts/webfonts, then the docs page
 make check      # OTS sanitizer + Font Bakery (universal profile)
 ```
 
-The motion piece and README images are rendered from the same fonts: `make media` (needs `pycairo`, `uharfbuzz`, `scipy`, `ffmpeg` and Noto Sans CJK).
+The motion piece and README images are rendered from the same fonts: `python3 -m pip install -r requirements-media.txt`, then `make media` (also needs `ffmpeg`, the cairo library and Noto Sans CJK).
 
 The music is original and generated in code by [`scripts/bgm.py`](scripts/bgm.py): 96 BPM lo-fi in D minor pentatonic, with guzheng-style plucks over electric piano, pad, bass and soft drums. Picture and music share one timeline, so the blade sound lands on the cut, the beat drops as the cut-off piece falls, each letter gets its own pluck panned to its position, and every typed character clicks.
 

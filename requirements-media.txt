@@ -1,0 +1,5 @@
+# motion piece, music and README images (also needs ffmpeg, the cairo system library and Noto Sans CJK)
+-r requirements.txt
+scipy>=1.11
+pycairo>=1.25
+uharfbuzz>=0.39
