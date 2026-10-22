@@ -14,14 +14,16 @@ Tangping is a display typeface whose Latin letters are drawn as bold Hei
 quarter-turn, cut it straight across, and its three parts read M A N.
 
 Two styles share one design:
-- Tangping Regular: capitals M N V W X Y Z sit short, as in the original MAN.
+- Tangping Regular: in all-caps, the capitals C E F J M N O Q T V X Y sit short, as M and N do
+  in the original MAN. Which capitals sit short is derived from real characters
+  (research/rhythm.py), not chosen by hand.
 - Tangping Even: every capital is tall.
 In both, lowercase stands on the short height (527), with ascenders up to the
 capital height (689) and descenders to -190, in the same stroke weights.
 
 Character set: Basic Latin, Latin-1 letters and symbols, Œ œ Š š Ž ž Ÿ ı,
 general punctuation, € ™, arrows and the corner brackets 「 」. Since 3.200: the
-full Google Fonts Latin Core set with combining accents (380 glyphs).
+full Google Fonts Latin Core set with combining accents (404 glyphs since 4.200).
 
 The fonts are generated from code (sources/build.py). Every glyph is
 built from a small set of stroke primitives: stems, bars with concave
@@ -41,6 +43,11 @@ not part of this font and is not redistributed here.
 
 ChangeLog
 ---------
+
+22 October 2026 (The Tangping Project Authors) Tangping v4.200
+- Capital rhythm from real characters: every GB2312 character turned and cut as
+  曼 is, at the same scale; capitals whose real pieces come out short sit short in
+  Regular (C E F J M N O Q T V X Y). The same test gives M N short and A tall.
 
 22 October 2026 (The Tangping Project Authors) Tangping v4.100
 - Fixes from an independent review: filled counters in accented letters (now

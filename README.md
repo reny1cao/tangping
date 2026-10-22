@@ -47,12 +47,18 @@ We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quart
 
 | Style | Capitals | Lowercase |
 |---|---|---|
-| **Tangping Regular** | M N V W X Y Z sit short next to another capital, as in the original MAN, and stand tall elsewhere | short, with ascenders and descenders |
+| **Tangping Regular** | C E F J M N O Q T V X Y sit short inside all-caps, as M and N do in the original, and stand tall elsewhere | short, with ascenders and descenders |
 | **Tangping Even** | every capital is tall | short, with ascenders and descenders |
 
-Lowercase is drawn in the capitals' stroke weights and stands on the short height, the height of M and N in the original, so **case controls the bounce**. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of M N V W X Y Z in either style.
+### Which capitals sit short
 
-**Character set:** the full Google Fonts *Latin Core* set (319 characters): Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian and Esperanto, plus ẞ Ł Ħ Ŧ, ordinals, punctuation, € £ ¥ ¢, © ® ™, arrows and 「 」. 380 glyphs in all.
+In the original, M and N sit short and A stands tall because of how 曼 is built: 罒 spans the full width, while 日 and 又 are set in. Tangping does not pick its short capitals by hand. [`research/rhythm.py`](research/rhythm.py) repeats the exact move on all 6,763 GB2312 characters: one cut across the whole character, at 曼's scale, with every component kept at its natural height. It then scores every piece against every capital drawn tall and short. A capital sits short when its real pieces come out short under every weighting tested. The same test gives M and N short and A tall, as in 曼.
+
+![Tall or short, decided by real characters](docs/images/rhythm.png)
+
+Lowercase is drawn in the capitals' stroke weights and stands on the short height, the height of M and N in the original, so **case controls the bounce**. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of those twelve capitals in either style.
+
+**Character set:** the full Google Fonts *Latin Core* set (319 characters): Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian and Esperanto, plus ẞ Ł Ħ Ŧ, ordinals, punctuation, € £ ¥ ¢, © ® ™, arrows and 「 」. 404 glyphs in all.
 
 **OpenType:** class kerning (`kern`), accents positioned on any letter (`mark`, `mkmk`), dotless i and j under accents (`ccmp`), short capitals only inside all-caps in Regular (`calt`), tall/short capitals (`ss01`). Figures are tabular. The fonts are hinted.
 

@@ -11,7 +11,8 @@ They need **Noto Sans CJK Bold** (SIL OFL 1.1), which is not part of this reposi
 3. **Finer search** (`find2.py`, `HARD=...`). For letters the broad pass misses: a straight cut on any side, 0–50%, in eighths.
 4. **Verify** (`verify.py picks.json out.png`). Each pick is re-rendered at full resolution as a strip (character → turned → cut → piece ≈ letter) with an independent similarity score. This step caught three wrong first guesses: 乙 turns into N, not Z; 巴 came out mirrored; 山 cut for F loses its stem.
 5. **Same scale as the original** (`fixed.py`, `fixed_sheet.py`). The search repeated without rescaling: every character is scaled exactly as 曼 is in the original cut (stems come out at 100 units), so a winning piece could be used as it is. At that scale A, C, F, J, L, M, N, O and X still have clean real pieces; G, Q, S, Y and Z do not.
-6. **Export** (`export_sources.py`). The real outlines, turned and cut with path operations, go to `docs/data/sources.json` for the source map.
+6. **Which capitals sit short** (`rhythm.py`, `rhythm_sheet.py`). The 曼 move applied to every character: one cut across the whole character at 曼's scale, every component kept at its natural height and width, and each piece scored against every capital drawn tall (689) and short (527). A capital sits short when its short pieces beat its tall ones under all four size weightings. Result (`rhythm.json`): **C E F J M N O Q T V X Y** short, with M and N short and A tall, matching 曼. D and S have no clear answer and stand tall.
+7. **Export** (`export_sources.py`). The real outlines, turned and cut with path operations, go to `docs/data/sources.json` for the source map.
 
 `picks.json` holds the final choice per letter: `[character, turn, band start, band end, top cut, bottom cut]`, where turn `1` is counter-clockwise (as in 曼 → MAN) and `3` is clockwise, and every fraction is relative to the turned character's bounding box.
 
@@ -48,5 +49,7 @@ They need **Noto Sans CJK Bold** (SIL OFL 1.1), which is not part of this reposi
 | `score_all.py` | Scores for every pick against the current fonts |
 | `fixed.py` | Search at the original scale (no rescaling); `OUT=fixed.pkl python3 fixed.py` |
 | `fixed_sheet.py` | Contact sheet of the best real pieces per letter, at true relative size |
+| `rhythm.py` | Tall or short for each capital, from real characters; writes `rhythm.json` |
+| `rhythm_sheet.py` | Evidence image for `rhythm.py` → `docs/images/rhythm.png` |
 | `realpiece.py` | Vector pieces of real hanzi: scale, quarter-turn, band and cut with path operations |
 | `export_sources.py` | Source map data for the docs page |

@@ -334,7 +334,7 @@ def scene_end(ctx, t):
     TANG.draw(ctx, 330, 470, 0.25, ease_io(seg(t, TL["lie_down"], TL["lie_down"] + 0.6)), a=a)
     text_run(ctx, EVEN, "Tangping", 600, 560, 230, INK, a)
     label(ctx, "FREE & OPEN SOURCE  ·  SIL OPEN FONT LICENSE 1.1", 606, 660, 26, GREEN, a)
-    label(ctx, "REGULAR & EVEN  ·  380 GLYPHS  ·  OTF + WOFF2", 606, 706, 22, MUTED, a)
+    label(ctx, f"REGULAR & EVEN  ·  {len(REG.tt.getGlyphOrder())} GLYPHS  ·  OTF + WOFF2", 606, 706, 22, MUTED, a)
     a2 = a * ease(seg(t, t0 + 0.6, t0 + 1.2))
     label(ctx, "IDEA: サイバー環状線  @CyberKanjousen", 606, 760, 24, INK, a2, "Noto Sans CJK SC", cairo.FONT_WEIGHT_BOLD)
     label(ctx, "MUSIC: ORIGINAL, SYNTHESIZED IN CODE  ·  github.com/reny1cao/tangping", 606, 800, 18, MUTED, a2)

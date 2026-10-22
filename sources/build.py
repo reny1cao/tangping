@@ -16,7 +16,8 @@ Rules, measured from the original 曼 → MAN image (1px ≈ 4.5 units):
     where it is square, the corner stays square (O is 口)
   * condensed: two-stem letters are 340 wide with a 140 counter
   * two heights: tall 689 and short 527
-      capitals stand tall; Regular sets M N V W X Y Z short, as in the original MAN
+      capitals stand tall; in Regular, the capitals whose real source pieces come out short
+      (found by research/rhythm.py: C E F J M N O Q T V X Y) sit short, as M and N do in MAN
       lowercase stands on the short height, with ascenders to 689 and descenders to -190
 
 Usage:  python3 sources/build.py            # writes fonts/otf and fonts/webfonts
@@ -26,7 +27,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
-VERSION = "4.100"
+VERSION = "4.200"
 COPYRIGHT = "Copyright 2026 The Tangping Project Authors (https://github.com/reny1cao/tangping)"
 DESIGNER = "Rocco × Claude"
 PROJECT_URL = "https://github.com/reny1cao/tangping"
@@ -35,7 +36,11 @@ S, B, C = 100, 135, 140        # stem, bar, counter
 TALL, LOW = 689, 527
 SB = 43
 W2 = 2 * S + C                 # 340
-LOWCAPS = set("MNVWXYZ")       # capitals that sit low in Regular
+# Capitals that sit short in Regular, as M and N do in 曼 → MAN. Not chosen by hand: research/rhythm.py
+# turns and cuts every GB2312 character exactly as 曼 is cut, at the same scale, and a capital sits
+# short when its real pieces come out short (research/rhythm.json). The same test gives M N short, A tall.
+LOWCAPS = set("CEFJMNOQTVXY")
+RHYTHM = "letters"             # Regular all-caps: "letters" (LOWCAPS low) or "bounce" (every other)
 DESC = -190
 RO, RI = 95, 30                # Hei turn radii (outer, counter)
 
@@ -1889,8 +1894,14 @@ def profile(path):
             return np.nanmin(X, 1), np.nanmax(X, 1)
 
 
-def side_bearings(path, h, T, k=0.2, D=160, sbmin=8):
+SPACE_K, SPACE_D = 0.2, 160          # how much of a side's openness is taken out of its sidebearing
+KERN_OPEN, KERN_CLOSE = 0.4, 0.6     # interlocking pairs: slack beyond KERN_OPEN×gap, closed by KERN_CLOSE
+
+
+def side_bearings(path, h, T, k=None, D=None, sbmin=8):
     """shape-aware sidebearings: open sides (white reaching deep into the letter) get less space"""
+    k = SPACE_K if k is None else k
+    D = SPACE_D if D is None else D
     band = (YS >= 0) & (YS <= h)
     l, r = profile(path)
     lb, rb = l[band], r[band]
@@ -1959,8 +1970,8 @@ def auto_kerning(glyphs, paths, adv, min_gap=45):
             raw_min = min(gaps)                                 # closest approach, with vertical slack
             ref = Ta + Tb                                       # the H|H gap
             slack = raw_min - ref
-            if slack > 0.4 * ref:                              # interlocking shapes (LT, Ta, T.): close up
-                k = max(-0.6 * slack, -170)
+            if slack > KERN_OPEN * ref:                        # interlocking shapes (LT, Ta, T.): close up
+                k = max(-KERN_CLOSE * slack, -170)
             elif raw_min < min_gap:                            # would touch (accents, tips): open up
                 k = min_gap - raw_min
                 if a.endswith("_m") or b.endswith("_m"):        # accent against accent: a little air,
@@ -2007,7 +2018,8 @@ def features(glyphs, by_key, pairs, anchors, style):
     out.append(f"@TOPMARKS = [{' '.join(tops)}];\nlookup dotless {{ sub i by dotlessi; sub j by {dj}; }} dotless;\n"
                "feature ccmp { sub [i j]' lookup dotless @TOPMARKS; } ccmp;")
     alts = sorted(n for n in names if n.endswith(".ss01"))
-    label = "Short capitals M N V W X Y Z (as in the original MAN)" if style == "Even" else "Tall capitals M N V W X Y Z"
+    lows = " ".join(sorted(LOWCAPS))
+    label = f"Short capitals {lows} (as in the original MAN)" if style == "Even" else f"Tall capitals {lows}"
     out.append("feature ss01 {\n  featureNames { name \"" + label + "\"; };")
     for a in alts:
         out.append(f"  sub {a[:-5]} by {a};")
@@ -2019,8 +2031,13 @@ def features(glyphs, by_key, pairs, anchors, style):
         shorts = [a[:-5] for a in alts]
         out.append(f"@UPPER = [{' '.join(upper)}];")
         out.append(f"@SHORTCAP = [{' '.join(shorts)}];\n@TALLCAP = [{' '.join(alts)}];")
-        out.append("feature calt {\n  lookupflag IgnoreMarks;\n  ignore sub @UPPER @SHORTCAP';\n"
-                   "  ignore sub @SHORTCAP' @UPPER;\n  sub @SHORTCAP' by @TALLCAP;\n} calt;")
+        out.append("lookup solo {\n  lookupflag IgnoreMarks;\n  ignore sub @UPPER @SHORTCAP';\n"
+                   "  ignore sub @SHORTCAP' @UPPER;\n  sub @SHORTCAP' by @TALLCAP;\n} solo;")
+        if RHYTHM == "bounce":          # inside all-caps, every second capital stands up: m A n
+            out.append("lookup bounce {\n  lookupflag IgnoreMarks;\n  sub @SHORTCAP @SHORTCAP' by @TALLCAP;\n} bounce;")
+            out.append("feature calt { lookup solo; lookup bounce; } calt;")
+        else:
+            out.append("feature calt { lookup solo; } calt;")
     return "\n".join(out)
 
 

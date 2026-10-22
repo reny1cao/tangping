@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.200 — 2026-10-22
+**Capital rhythm from real characters.** In 曼 → MAN, M and N sit short and A stands tall because of how 曼 is built: 罒 spans the full width, 日 and 又 are set in. `research/rhythm.py` now repeats that exact move for all 6,763 GB2312 characters (one cut across the whole character, 曼's scale, every component kept at its natural height) and scores every piece against every capital drawn tall and short. A capital sits short when its real pieces come out short under all four size weightings tested; anything without a clear answer stands tall. The test reproduces 曼 (M N short, A tall).
+- Regular's short capitals are now **C E F J M N O Q T V X Y** (were M N V W X Y Z, chosen by hand). W and Z now stand tall; C E F J O Q T sit short.
+- `ss01` swaps the same twelve. Results and margins: `research/rhythm.json`; evidence image: `docs/images/rhythm.png`.
+
 ## 4.100 — 2026-10-22
 Fixes from an independent review of 4.000.
 - **Counters:** accented letters built on a letter with Hei turns (á é ğ Ď Ř æ œ Ð đ …) had their counters filled in. Fixed, and the build now refuses any accented letter with fewer counters than its base.
