@@ -18,7 +18,7 @@ Turn 曼 a quarter-turn, slice it straight across, and its three parts read **M 
 
 ## The idea
 
-![曼 turned and cut reads mAn](docs/images/cut-man.png)
+![曼 turned and cut reads MAN](docs/images/cut-man.png)
 
 Lay 曼 down counter-clockwise and cut off a little under half of it. 日 becomes **M**, 罒 becomes **A**, and 又 becomes **N**, with the 捺 stroke still sweeping past the top. The M, A and N in this font are traced from that move; everything else follows the rules it reveals:
 
@@ -46,12 +46,14 @@ We searched all 6,763 GB2312 characters in a bold Hei font, turning each a quart
 
 | Style | Capitals | Lowercase |
 |---|---|---|
-| **Tangping Regular** | M N V W X Y Z sit short, as in the original MAN | short form of every letter |
-| **Tangping Even** | every capital is tall | short form of every letter |
+| **Tangping Regular** | M N V W X Y Z sit short, as in the original MAN | a narrower, lighter short form of every letter |
+| **Tangping Even** | every capital is tall | a narrower, lighter short form of every letter |
 
-Because lowercase is the short form, **case controls the bounce**: typing `mAn` in Tangping Even reproduces the original image.
+Lowercase is the short form, so **case controls the bounce**, and it is narrower and lighter so it never matches a capital. Typing **MAN** in Tangping Regular reproduces the original image. The `ss01` stylistic set swaps the tall and short forms of M N V W X Y Z in either style.
 
-**Character set:** Basic Latin, Latin-1 (French, German, Spanish, Portuguese, Nordic…), Œ œ Š š Ž ž Ÿ ı, punctuation and quotes, € £ ¥ ¢, © ® ™, ± × ÷, arrows, and the corner brackets 「 」 — 205 glyphs, with kerning.
+**Character set:** the full Google Fonts *Latin Core* set (319 characters): Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian and Esperanto, plus ẞ Ł Ħ Ŧ, ordinals, punctuation, € £ ¥ ¢, © ® ™, arrows and 「 」. 380 glyphs in all.
+
+**OpenType:** class kerning (`kern`), accents positioned on any letter (`mark`, `mkmk`), dotless i and j under accents (`ccmp`), tall/short capitals (`ss01`). Figures are tabular. The fonts are hinted.
 
 ## Use
 
@@ -70,11 +72,11 @@ Tangping is a display face: use it large, for headlines, logos, posters and titl
 
 ## Build from source
 
-The fonts are generated from code. Every glyph is assembled from a few stroke primitives in [`sources/build.py`](sources/build.py).
+The fonts are generated from code. Every glyph is assembled from a few stroke primitives in [`sources/build.py`](sources/build.py), which also sets each letter's spacing from its shape, generates the kerning and accents, and hints the result with AFDKO's `otfautohint`. [`scripts/audit.py`](scripts/audit.py) measures spacing, collisions, stroke weights, colour and confusable glyphs.
 
 ```sh
 python3 -m pip install -r requirements.txt
-make            # fonts → fonts/otf + fonts/webfonts, then the docs page
+make            # fonts (spaced, kerned and hinted) → fonts/otf + fonts/webfonts, then the docs page
 make check      # OTS sanitizer + Font Bakery (universal profile)
 ```
 

@@ -227,7 +227,7 @@ MAN_X, MAN_Y = W / 2, H / 2 + 10
 
 
 def scene_intro(ctx, t):
-    """bar 1–4: 曼 stands, lies down, is cut, reads mAn; then the title"""
+    """bar 1–4: 曼 stands, lies down, is cut, reads MAN; then the title"""
     steps = [(0.4, TL["turn"][0], "曼  màn", "stand"), (TL["turn"][0], TL["cutline"][0], "躺平", "lie down"),
              (TL["cutline"][0], TL["drop"], "切", "cut"), (TL["drop"], 6.6, "读", "read")]
     a_scene = 1 - ease(seg(t, *TL["intro_out"]))
@@ -253,11 +253,11 @@ def scene_intro(ctx, t):
                          a=1 - ease(seg(t, TL["drop"], TL["drop"] + 0.4)))
     if morph > 0:
         x0, y0, x1, y1 = MAN.kept_screen_box(MAN_X, MAN_Y, MAN_S)
-        glyphs, adv = EVEN.shape("mAn")
+        glyphs, adv = REG.shape("MAN")
         px = (x1 - x0) / (adv / 1000) * 0.98
         g = ease_io(seg(t, *TL["glide"]))
         bx = lerp(x0, 150, g); by = lerp(y1, 420, g); pxx = lerp(px, 230, g)
-        text_run(ctx, EVEN, "mAn", bx, by, pxx, INK, morph * a_scene)
+        text_run(ctx, REG, "MAN", bx, by, pxx, INK, morph * a_scene)
         a = ease(seg(t, TL["title"] - 0.45, TL["title"])) * a_scene
         if a > 0:
             text_run(ctx, EVEN, "TANGPING", 150, 740, 250, INK, a)
@@ -334,7 +334,7 @@ def scene_end(ctx, t):
     TANG.draw(ctx, 330, 470, 0.25, ease_io(seg(t, TL["lie_down"], TL["lie_down"] + 0.6)), a=a)
     text_run(ctx, EVEN, "Tangping", 600, 560, 230, INK, a)
     label(ctx, "FREE & OPEN SOURCE  ·  SIL OPEN FONT LICENSE 1.1", 606, 660, 26, GREEN, a)
-    label(ctx, "REGULAR & EVEN  ·  205 GLYPHS  ·  OTF + WOFF2", 606, 706, 22, MUTED, a)
+    label(ctx, "REGULAR & EVEN  ·  380 GLYPHS  ·  OTF + WOFF2", 606, 706, 22, MUTED, a)
     a2 = a * ease(seg(t, t0 + 0.6, t0 + 1.2))
     label(ctx, "IDEA: サイバー環状線  @CyberKanjousen", 606, 760, 24, INK, a2, "Noto Sans CJK SC", cairo.FONT_WEIGHT_BOLD)
     label(ctx, "MUSIC: ORIGINAL, SYNTHESIZED IN CODE  ·  github.com/reny1cao/tangping", 606, 800, 18, MUTED, a2)

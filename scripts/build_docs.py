@@ -9,7 +9,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 web = os.path.join(ROOT, "fonts", "webfonts")
 tpl = open(os.path.join(ROOT, "scripts", "specimen_template.html"), encoding="utf-8").read()
 cmap = TTFont(os.path.join(ROOT, "fonts", "otf", "Tangping-Regular.otf")).getBestCmap()
-chars = "".join(chr(c) for c in sorted(cmap) if c not in (0x20, 0xA0))
+import unicodedata
+chars = "".join(chr(c) for c in sorted(cmap) if c not in (0x20, 0xA0) and not unicodedata.category(chr(c)).startswith("M"))
 sources = json.load(open(os.path.join(ROOT, "docs", "data", "sources.json"), encoding="utf-8"))
 b64 = lambda name: base64.b64encode(open(os.path.join(web, name), "rb").read()).decode()
 

@@ -16,11 +16,12 @@ quarter-turn, cut it straight across, and its three parts read M A N.
 Two styles share one design:
 - Tangping Regular: capitals M N V W X Y Z sit short, as in the original MAN.
 - Tangping Even: every capital is tall.
-In both, lowercase is the short form of every letter, so case controls the
+In both, lowercase is a narrower, lighter short form of every letter, so case controls the
 height of each letter.
 
 Character set: Basic Latin, Latin-1 letters and symbols, Œ œ Š š Ž ž Ÿ ı,
-general punctuation, € ™, arrows and the corner brackets 「 」 (205 glyphs).
+general punctuation, € ™, arrows and the corner brackets 「 」. Since 3.200: the
+full Google Fonts Latin Core set with combining accents (380 glyphs).
 
 The fonts are generated from code (sources/build.py). Every glyph is
 built from a small set of stroke primitives: stems, bars with concave
@@ -39,6 +40,11 @@ not part of this font and is not redistributed here.
 
 ChangeLog
 ---------
+
+22 October 2026 (The Tangping Project Authors) Tangping v3.200
+- Fixes from a design audit: distinct D/O, B/8, S/5, 6/8/9, I/1, 0/O; lowercase
+  narrower and lighter; i and j dotted; shape-based spacing; automatic class
+  kerning; Latin Core coverage with mark positioning; tabular figures; hinting.
 
 21 October 2026 (The Tangping Project Authors) Tangping v3.100
 - Letters redrawn to follow their source characters; distribution metadata;

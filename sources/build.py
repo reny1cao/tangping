@@ -23,8 +23,8 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
-VERSION = "3.100"
-COPYRIGHT = "Copyright 2026 The Tangping Project Authors"
+VERSION = "3.200"
+COPYRIGHT = "Copyright 2026 The Tangping Project Authors (https://github.com/reny1cao/tangping)"
 DESIGNER = "Rocco × Claude"
 PROJECT_URL = "https://github.com/reny1cao/tangping"
 
@@ -37,14 +37,27 @@ DESC = -200
 
 
 def bi(h):
-    """inner (cross) bar thickness: lighter on short forms so counters stay open"""
-    return B if h >= 600 else 108
+    """inner (cross) bar thickness: thinner than the outer bars, as in the reference A (~110),
+    so letters with stacked bars (B E S 8 3) stay even in colour"""
+    return 112 if h >= 600 else 108
 
 
 # ================================================================ primitives
 class Shape:
     def __init__(self):
         self.contours = []
+        self.cuts = []          # contours subtracted after the union (chamfers, notches)
+
+    def cut(self, *pts):
+        self.cuts.append([("M", pts[0])] + [("L", p) for p in pts[1:]])
+        return self
+
+    def transformed(self, sx=1.0, sy=1.0, dx=0.0, dy=0.0):
+        out = Shape()
+        f = lambda p: (p[0] * sx + dx, p[1] * sy + dy)
+        out.contours = [[(op[0],) + tuple(f(p) for p in op[1:]) for op in c] for c in self.contours]
+        out.cuts = [[(op[0],) + tuple(f(p) for p in op[1:]) for op in c] for c in self.cuts]
+        return out
 
     def poly(self, *pts):
         self.contours.append([("M", pts[0])] + [("L", p) for p in pts[1:]])
@@ -55,11 +68,9 @@ class Shape:
         return self
 
     def add(self, other, dx=0, dy=0):
-        for c in other.contours:
-            nc = []
-            for op in c:
-                nc.append((op[0],) + tuple((p[0] + dx, p[1] + dy) for p in op[1:]))
-            self.contours.append(nc)
+        t = other.transformed(1, 1, dx, dy)
+        self.contours += t.contours
+        self.cuts += t.cuts
         return self
 
 
@@ -166,6 +177,17 @@ def box(sh, x0, y0, x1, y1, ts=S, tb=B, top=True, bot=True):
     return sh
 
 
+def chamfer(sh, x, y, sx, sy, c_out=130, c_in=58, ts=S, tb=B):
+    """cut a 45° chamfer into an outer corner at (x, y); sx/sy = +1 for a right/top corner.
+    The inner corner gets a matching fill so the diagonal keeps the stroke weight."""
+    e = 30                                   # reach past the corner so bar-end flares are cut too
+    sh.cut((x - sx * c_out, y), (x - sx * c_out, y + sy * e), (x + sx * e, y + sy * e),
+           (x + sx * e, y - sy * c_out), (x, y - sy * c_out))
+    xi, yi = x - sx * ts, y - sy * tb
+    sh.poly((xi + sx, yi + sy), (xi - sx * c_in, yi + sy), (xi + sx, yi - sy * c_in))
+    return sh
+
+
 def over(h):
     """how far 捺 tips rise above the stems"""
     return 175 if h < 600 else 140
@@ -188,7 +210,7 @@ def _A(h):
     s = Shape()
     tbar(s, 0, W2, h)
     stem(s, 0, 0, h - B + 1); stem(s, 240, 0, h - B + 1)
-    xbar(s, 0, W2, 122, bi(h))
+    xbar(s, 0, W2, 122, B if h >= 600 else bi(h))   # full bar weight, as measured in the reference
     return s
 
 
@@ -216,10 +238,9 @@ def _C(h):            # 冂 lying down: the hook survives at the top right
 
 @letter("D", W2)
 def _D(h):
-    s = Shape()
-    stem(s, 0, 0, h)
-    tbar(s, 0, 262, h, fr=False); bbar(s, 0, 262, fr=False)
-    stem(s, 240, 72, h - 72)
+    s = box(Shape(), 0, 0, W2, h)          # 巳 lying down, with its right corners cut (unlike O)
+    chamfer(s, W2, h, 1, 1, 175, 103)
+    chamfer(s, W2, 0, 1, -1, 175, 103)
     return s
 
 
@@ -355,7 +376,7 @@ def _P(h):
 @letter("Q", 360)
 def _Q(h):
     s = box(Shape(), 0, 0, W2, h)
-    pie(s, 150, 230, 255, -95, wt=118, wb=105)
+    pie(s, 135, 250, 290, -160, wt=118, wb=110)
     return s
 
 
@@ -415,8 +436,8 @@ def _W(h):            # 山
 @letter("X", 520)
 def _X(h):
     s = Shape()
-    pie(s, 0, h, 300, 0, wt=126, wb=116, slant=45)
-    na(s, 0, 0, 380, h + over(h), wb=125, wt=124, tipdrop=56)
+    pie(s, 0, h, 300, 0, wt=112, wb=104, slant=40)
+    na(s, 0, 0, 380, h + over(h), wb=112, wt=116, tipdrop=52)
     return s
 
 
@@ -450,24 +471,24 @@ def digit(name, ch, width):
 
 
 @digit("zero", "0", W2)
-def _0(h):
+def _0(h):            # dotted zero: a 点 in the counter, so 0 never reads as O
     s = box(Shape(), 0, 0, W2, h)
-    s.poly((100, B - 1), (172, B - 1), (240, h - B + 1), (168, h - B + 1))
+    rect(s, 124, round(h / 2) - 62, 216, round(h / 2) + 62)
     return s
 
 
 @digit("one", "1", 300)
-def _1(h):
+def _1(h):            # the flag is a 撇, so 1 never reads as I
     s = Shape()
     stem(s, 100, 0, h)
-    tbar(s, 0, 200, h, fr=False)
+    s.poly((100, h), (200, h), (96, h - 200), (-4, h - 200))
     bbar(s, 0, 300)
     return s
 
 
 @digit("two", "2", W2)
 def _2(h):
-    s = Shape(); t = B
+    s = Shape(); t = bi(h)
     mid = round((h - t) / 2)
     tbar(s, 0, W2, h)
     stem(s, 240, mid, h - B + 1)
@@ -481,7 +502,7 @@ def _2(h):
 def _3(h):            # 山 lying down
     s = Shape()
     tbar(s, 0, W2, h); bbar(s, 0, W2)
-    xbar(s, 70, W2, round((h - B) / 2))
+    xbar(s, 70, W2, round((h - bi(h)) / 2), bi(h))
     stem(s, 240, 0, h)
     return s
 
@@ -499,22 +520,26 @@ def _4(h):            # 上 lying down
 @digit("five", "5", W2)
 def _5(h):
     s = Shape()
-    mid = round((h - B) * 0.56)
+    t = bi(h)
+    mid = round((h - t) * 0.56)
     tbar(s, 0, W2, h)
     stem(s, 0, mid, h - B + 1)
-    xbar(s, 0, 255, mid)
+    xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
-    bbar(s, 0, W2)
+    bbar(s, 0, W2, fr=False)
+    chamfer(s, W2, mid + t, 1, 1, 150, 92, tb=t)  # a rounded bowl, unlike the square S
+    chamfer(s, W2, 0, 1, -1, 160, 88)
     return s
 
 
 @digit("six", "6", W2)
 def _6(h):
     s = Shape()
-    mid = round((h - B) * 0.48)
+    t = bi(h)
+    mid = round((h - t) * 0.48)
     stem(s, 0, 0, h)
-    tbar(s, 0, W2, h)
-    xbar(s, 0, W2, mid)
+    tbar(s, 0, 250, h, fr=False)                    # open top right: not 8, not S
+    xbar(s, 0, W2, mid, t)
     stem(s, 240, B - 1, mid + 1)
     bbar(s, 0, W2)
     return s
@@ -530,20 +555,26 @@ def _7(h):
 
 @digit("eight", "8", W2)
 def _8(h):
-    s = box(Shape(), 0, 0, W2, h)
-    xbar(s, 0, W2, round((h - B) * 0.53))
+    s = Shape(); t = bi(h)                         # narrower top bowl: not B, not 0
+    mid = round((h - t) * 0.5)
+    stem(s, 0, 0, mid + t); stem(s, 240, 0, mid + t)
+    bbar(s, 0, W2)
+    xbar(s, 0, W2, mid, t)
+    stem(s, 45, mid, h); stem(s, 195, mid, h)
+    tbar(s, 45, 295, h)
     return s
 
 
 @digit("nine", "9", W2)
 def _9(h):
     s = Shape()
-    mid = round((h - B) * 0.52)
+    t = bi(h)
+    mid = round((h - t) * 0.52)
     tbar(s, 0, W2, h)
     stem(s, 0, mid, h - B + 1)
-    xbar(s, 0, W2, mid)
+    xbar(s, 0, W2, mid, t)
     stem(s, 240, 0, h)
-    bbar(s, 0, 260, fr=False)
+    bbar(s, 90, W2, fl=False)                       # open bottom left: 6 turned round
     return s
 
 
@@ -683,7 +714,7 @@ def _qdr(): return tick(tick(Shape(), 0, T - 118), 172, T - 118)
 def _qdb(): return tick(tick(Shape(), 0, 0), 172, 0)
 
 
-def chevron(s, x, y, w=200, h=300, t=110, left=True):
+def chevron(s, x, y, w=200, h=300, t=150, left=True):
     """angle quote built from a 撇 and a 捺-ish bar meeting at a point"""
     if left:
         s.poly((x + w, y + h), (x + w - t, y + h), (x, y + h / 2 + 45), (x, y + h / 2 - 45),
@@ -787,11 +818,11 @@ def _cbr():           # 」
 
 
 @sym("less", "<", 400)
-def _less(): return chevron(Shape(), 0, 110, w=400, h=420, t=125)
+def _less(): return chevron(Shape(), 0, 110, w=400, h=420, t=200)
 
 
 @sym("greater", ">", 400)
-def _greater(): return chevron(Shape(), 0, 110, w=400, h=420, t=125, left=False)
+def _greater(): return chevron(Shape(), 0, 110, w=400, h=420, t=200, left=False)
 
 
 @sym("plus", "+", 400)
@@ -814,8 +845,8 @@ def _pm():
 @sym("multiply", "×", 400)
 def _mul():
     s = Shape()
-    s.poly((0, 120), (85, 120), (400, 480), (315, 480))
-    s.poly((315, 120), (400, 120), (85, 480), (0, 480))
+    s.poly((0, 120), (125, 120), (400, 480), (275, 480))
+    s.poly((275, 120), (400, 120), (125, 480), (0, 480))
     return s
 
 
@@ -858,8 +889,8 @@ def _ast():
     s = Shape(); cx, cy = 170, 520
     stem(s, cx - 50, cy - 170, cy + 170)
     for sg in (1, -1):
-        s.poly((0, cy - 95 * sg - 45), (340, cy + 95 * sg - 45),
-               (340, cy + 95 * sg + 45), (0, cy - 95 * sg + 45))
+        s.poly((0, cy - 95 * sg - 52), (340, cy + 95 * sg - 52),
+               (340, cy + 95 * sg + 52), (0, cy - 95 * sg + 52))
     return s
 
 
@@ -937,8 +968,8 @@ def _euro():
 def _pct():
     s = Shape()
     for x0, y0 in ((0, 400), (320, 0)):
-        stem(s, x0, y0, y0 + 289, w=70); stem(s, x0 + 170, y0, y0 + 289, w=70)
-        rect(s, x0, y0, x0 + 240, y0 + 90); rect(s, x0, y0 + 199, x0 + 240, y0 + 289)
+        stem(s, x0, y0, y0 + 289, w=88); stem(s, x0 + 152, y0, y0 + 289, w=88)
+        rect(s, x0, y0, x0 + 240, y0 + 92); rect(s, x0, y0 + 197, x0 + 240, y0 + 289)
     s.poly((60, 0), (170, 0), (500, T), (390, T))
     return s
 
@@ -973,8 +1004,8 @@ def _bullet(): return sq(Shape(), 0, 220, 220)
 
 @sym("degree", "°", 240)
 def _deg():
-    s = Shape(); stem(s, 0, 450, T, w=80); stem(s, 160, 450, T, w=80)
-    rect(s, 0, T - 80, 240, T); rect(s, 0, 450, 240, 530)
+    s = Shape(); stem(s, 0, 430, T, w=90); stem(s, 150, 430, T, w=90)
+    rect(s, 0, T - 90, 240, T); rect(s, 0, 430, 240, 520)
     return s
 
 
@@ -999,10 +1030,10 @@ def _reg():
 @sym("trademark", "™", 640)
 def _tm():
     s = Shape()
-    xbar(s, 0, 240, T - 100, 100); stem(s, 80, 380, T, w=80)
-    xbar(s, 290, 640, T - 100, 100)
+    xbar(s, 0, 240, T - 100, 100); stem(s, 75, 380, T, w=90)
+    xbar(s, 290, 650, T - 100, 100)
     for x in (290, 425, 560):
-        stem(s, x, 380, T, w=80)
+        stem(s, x, 380, T, w=90)
     return s
 
 
@@ -1015,13 +1046,13 @@ def _not():
 @sym("arrowleft", "←", 700)
 def _arl():
     s = Shape(); xbar(s, 60, 700, 240)
-    return chevron(s, 0, 60, w=260, h=500, t=125)
+    return chevron(s, 0, 60, w=260, h=500, t=135)
 
 
 @sym("arrowright", "→", 700)
 def _arr():
     s = Shape(); xbar(s, 0, 640, 240)
-    return chevron(s, 440, 60, w=260, h=500, t=125, left=False)
+    return chevron(s, 440, 60, w=260, h=500, t=135, left=False)
 
 
 @sym("arrowup", "↑", 500)
@@ -1039,6 +1070,7 @@ def _ard():
 
 
 # ================================================================ accents
+# Top marks are drawn with their bottom edge on y, centred on cx. Bottom marks hang below y = 0.
 def acc_acute(s, cx, y):
     return s.poly((cx - 75, y), (cx + 30, y), (cx + 105, y + 160), (cx - 5, y + 175))
 
@@ -1062,14 +1094,33 @@ def acc_dier(s, cx, y):
 
 
 def acc_ring(s, cx, y):
-    stem(s, cx - 110, y, y + 190, w=72); stem(s, cx + 38, y, y + 190, w=72)
-    rect(s, cx - 110, y, cx + 110, y + 66); rect(s, cx - 110, y + 124, cx + 110, y + 190)
+    stem(s, cx - 110, y, y + 200, w=88); stem(s, cx + 22, y, y + 200, w=88)
+    rect(s, cx - 110, y, cx + 110, y + 84); rect(s, cx - 110, y + 116, cx + 110, y + 200)
     return s
 
 
 def acc_tilde(s, cx, y):
-    rect(s, cx - 180, y + 30, cx - 70, y + 150); rect(s, cx - 180, y + 70, cx + 10, y + 150)
-    rect(s, cx - 10, y, cx + 180, y + 80); rect(s, cx + 70, y, cx + 180, y + 120)
+    rect(s, cx - 180, y + 30, cx - 90, y + 150); rect(s, cx - 180, y + 60, cx + 10, y + 150)
+    rect(s, cx - 10, y, cx + 180, y + 90); rect(s, cx + 90, y, cx + 180, y + 120)
+    return s
+
+
+def acc_macron(s, cx, y):
+    return rect(s, cx - 140, y + 20, cx + 140, y + 112)
+
+
+def acc_breve(s, cx, y):
+    stem(s, cx - 140, y, y + 160, w=90); stem(s, cx + 50, y, y + 160, w=90)
+    return rect(s, cx - 140, y, cx + 140, y + 90)
+
+
+def acc_dot(s, cx, y):
+    return sq(s, cx - 59, y)
+
+
+def acc_hung(s, cx, y):
+    for c in (cx - 72, cx + 72):
+        s.poly((c - 58, y), (c + 30, y), (c + 92, y + 160), (c + 4, y + 175))
     return s
 
 
@@ -1078,39 +1129,239 @@ def acc_cedilla(s, cx, y=0):
     return rect(s, cx - 150, -200, cx + 50, -110)
 
 
-def acc_dot(s, cx, y):
-    return sq(s, cx - 59, y)
+def acc_comma(s, cx, y=0):          # comma below: a short 撇
+    return s.poly((cx - 15, -75), (cx + 85, -75), (cx + 15, -250), (cx - 85, -250))
 
 
-ACC = {"acute": acc_acute, "grave": acc_grave, "circumflex": acc_circ, "caron": acc_caron,
-       "dieresis": acc_dier, "ring": acc_ring, "tilde": acc_tilde, "dotaccent": acc_dot}
+def acc_ogonek(s, x, y=0):
+    stem(s, x - 45, -170, 10, w=90)
+    return rect(s, x - 45, -235, x + 125, -145)
 
-# (char, base letter, accent)
-ACCENTED = []
-for base, marks in {
-    "A": "grave acute circumflex tilde dieresis ring", "C": "cedilla",
-    "E": "grave acute circumflex dieresis", "I": "grave acute circumflex dieresis",
-    "N": "tilde", "O": "grave acute circumflex tilde dieresis",
-    "U": "grave acute circumflex dieresis", "Y": "acute dieresis",
-    "S": "caron", "Z": "caron",
-}.items():
-    for m in marks.split():
-        ACCENTED.append((base, m))
+
+def acc_caron_side(s, x, ytop):     # Ľ ľ: the caron becomes a 撇 beside the stem
+    return s.poly((x + 10, ytop), (x + 110, ytop), (x + 55, ytop - 190), (x - 45, ytop - 190))
+
+
+TOP_MARKS = {"grave": acc_grave, "acute": acc_acute, "circumflex": acc_circ, "tilde": acc_tilde,
+             "macron": acc_macron, "breve": acc_breve, "dotaccent": acc_dot, "dieresis": acc_dier,
+             "ring": acc_ring, "hungarumlaut": acc_hung, "caron": acc_caron}
+BOTTOM_MARKS = {"commaaccent": acc_comma, "cedilla": acc_cedilla}
+COMBINING = {0x300: "grave", 0x301: "acute", 0x302: "circumflex", 0x303: "tilde", 0x304: "macron",
+             0x306: "breve", 0x307: "dotaccent", 0x308: "dieresis", 0x30A: "ring", 0x30B: "hungarumlaut",
+             0x30C: "caron", 0x326: "commaaccent", 0x327: "cedilla", 0x328: "ogonek"}
+SPACING_MARKS = {0xA8: "dieresis", 0xAF: "macron", 0xB4: "acute", 0xB8: "cedilla", 0x2C6: "circumflex",
+                 0x2C7: "caron", 0x2D8: "breve", 0x2D9: "dotaccent", 0x2DA: "ring", 0x2DB: "ogonek",
+                 0x2DC: "tilde", 0x2DD: "hungarumlaut"}
+GAP = {"ring": 30}                  # distance between the letter and a top mark (default 60)
+TOP_X = {"N": 160, "Y": 175, "W": 243, "K": 150, "L": 70, "R": 165}    # off-centre top anchors
+BOTTOM_X = {"N": 185, "K": 165}
+OGONEK_X = {"A": 290, "E": 240, "I": 220, "U": 290}
+COMMA_BELOW = set("ĢģĶķĻļŅņŖŗ")     # Latvian: comma below, though Unicode decomposes to cedilla
+SIDE_CARON = set("Ľľ")
+MARK_X = -(SB + 170)                # combining marks sit over the preceding letter by default
+
+# ================================================================ glyph records
+LOWER_DRAW_H = 573                  # lowercase is drawn at this height, then scaled (0.9, 0.92)
+LSX, LSY = 0.9, 0.92
+
+
+class Glyph:
+    def __init__(self, name, unis, shape, kind, w=0, h=TALL, space_key=None, kern_key=None, anchors=None):
+        self.name, self.unis, self.shape, self.kind = name, list(unis), shape, kind
+        self.w, self.h = w, h
+        self.space_key = space_key or name     # glyphs sharing a key share spacing (accents don't move letters)
+        self.kern_key = kern_key or name       # kerning class
+        self.anchors = anchors or {}
+
+
+from fontTools.agl import UV2AGL
+
+
+def glyph_name(ch):
+    if ch.isascii() and ch.isalpha():
+        return ch
+    return UV2AGL.get(ord(ch), "uni%04X" % ord(ch))
+
+
+def letter_record(ch, h, lower):
+    """drawing + anchors for one letter form. lower=True gives the narrower, lighter lowercase."""
+    w, fn = L_[ch.upper()]
+    key = ch.upper()
+    if lower:
+        shape = fn(LOWER_DRAW_H).transformed(LSX, LSY)
+        w, h, sx = w * LSX, LOW, LSX
+    else:
+        shape, sx = fn(h), 1.0
+    cx = TOP_X.get(key, L_[key][0] / 2) * sx
+    anchors = {"top": (cx, h + 60), "bottom": (BOTTOM_X.get(key, L_[key][0] / 2) * sx, 0),
+               "ogonek": (OGONEK_X.get(key, L_[key][0] - 55) * sx, 0)}
+    return shape, w, h, anchors
+
+
+def with_mark(shape, mark, anchors, h, ch_base):
+    s = Shape().add(shape)
+    if mark in TOP_MARKS:
+        x, y = anchors["top"]
+        TOP_MARKS[mark](s, x, y - 60 + GAP.get(mark, 60))
+    elif mark in BOTTOM_MARKS:
+        BOTTOM_MARKS[mark](s, anchors["bottom"][0])
+    elif mark == "ogonek":
+        acc_ogonek(s, anchors["ogonek"][0])
+    elif mark == "caronside":
+        stem_right = (100 if ch_base.isupper() else 100 * LSX) + 25
+        acc_caron_side(s, stem_right, h)
+    return s
+
+
+def decompositions():
+    """precomposed Latin letters we can build: Latin-1, Latin Extended-A, Ș Ț, Ẁ–ẅ, Ỳ ỳ"""
+    cps = list(range(0xC0, 0x180)) + list(range(0x218, 0x21C)) + list(range(0x1E80, 0x1E86)) + [0x1EF2, 0x1EF3]
+    out = []
+    for cp in cps:
+        d = unicodedata.decomposition(chr(cp)).split()
+        if len(d) != 2 or d[0].startswith("<"):
+            continue
+        base, mk = chr(int(d[0], 16)), int(d[1], 16)
+        if base.upper() not in L_ or mk not in COMBINING:
+            continue
+        mark = COMBINING[mk]
+        if chr(cp) in COMMA_BELOW: mark = "commaaccent"
+        if chr(cp) in SIDE_CARON: mark = "caronside"
+        out.append((chr(cp), base, mark))
+    return out
+
 
 import unicodedata
 
 
-def accented_char(base, mark, lower):
-    nm = {"grave": "GRAVE", "acute": "ACUTE", "circumflex": "CIRCUMFLEX", "tilde": "TILDE",
-          "dieresis": "DIAERESIS", "ring": "RING ABOVE", "cedilla": "CEDILLA", "caron": "CARON"}[mark]
-    case = "SMALL" if lower else "CAPITAL"
-    try:
-        return unicodedata.lookup(f"LATIN {case} LETTER {base} WITH {nm}")
-    except KeyError:
-        return None
+def collect(style):
+    even = style == "Even"
+    G = []
+    cap_h = lambda c: TALL if (even or c not in LOWCAPS) else LOW
+    base = {}
+
+    # --- base letters: capitals, lowercase (narrower and lighter), ss01 alternates
+    for C in L_:
+        shape, w, h, an = letter_record(C, cap_h(C), False)
+        base[C] = (shape, w, h, an)
+        G.append(Glyph(C, C, shape, "letter", w, h, kern_key=C, anchors=an))
+        c = C.lower()
+        shape, w, h, an = letter_record(c, LOW, True)
+        if c in "ij":                       # 点 on i and j; dotless forms for marks above
+            stem_c = (150 if c == "i" else 290) * LSX
+            dotless = Shape().add(shape)
+            shape = Shape().add(shape); sq(shape, stem_c - 54, LOW + 60, 108)
+            dname = "dotlessi" if c == "i" else glyph_name("ȷ")
+            base[dname] = (dotless, w, h, an)
+            G.append(Glyph(dname, "ı" if c == "i" else "ȷ", dotless, "letter", w, h, space_key=c, kern_key=c, anchors=an))
+        base[c] = (shape, w, h, an)
+        G.append(Glyph(c, c, shape, "letter", w, h, kern_key=c, anchors=an))
+    alt_h = LOW if even else TALL
+    for C in sorted(LOWCAPS):
+        shape, w, h, an = letter_record(C, alt_h, False)
+        base[C + ".ss01"] = (shape, w, h, an)
+        G.append(Glyph(C + ".ss01", "", shape, "letter", w, h, space_key=C, kern_key=C + "_alt", anchors=an))
+
+    # --- precomposed letters
+    for ch, b, mark in decompositions():
+        name = glyph_name(ch)
+        lower = b.islower()
+        bkey = b
+        if lower and b in "ij" and mark in TOP_MARKS:
+            bkey = "dotlessi" if b == "i" else glyph_name("ȷ")
+        shape, w, h, an = base[bkey]
+        G.append(Glyph(name, ch, with_mark(shape, mark, an, h, b), "letter", w, h,
+                       space_key=b, kern_key=b + "_m", anchors=an))
+        if not lower and b in LOWCAPS:
+            shape, w, h, an = base[b + ".ss01"]
+            G.append(Glyph(name + ".ss01", "", with_mark(shape, mark, an, h, b), "letter", w, h,
+                           space_key=b, kern_key=b + "_alt_m", anchors=an))
+
+    # --- letters that are not base + mark
+    def lc(fn):                                   # draw at the lowercase height, then scale
+        return fn(LOWER_DRAW_H).transformed(LSX, LSY)
+
+    def special(name, uni, draw, w):
+        for lower in (False, True):
+            sh = draw(LOWER_DRAW_H).transformed(LSX, LSY) if lower else draw(TALL)
+            ch = uni[1] if lower else uni[0]
+            G.append(Glyph(glyph_name(ch), ch, sh, "letter", w * (LSX if lower else 1), LOW if lower else TALL))
+
+    def ae(h):
+        s = Shape(); t = bi(h)
+        tbar(s, 0, 522, h); stem(s, 0, 0, h - B + 1); stem(s, 240, 0, h)
+        xbar(s, 0, 340, 122, t); xbar(s, 340, 600, round((h - t) / 2), t)
+        bbar(s, 240, 552, fl=False)
+        return s
+
+    def oe(h):
+        s = Shape(); t = bi(h)
+        tbar(s, 0, 522, h); bbar(s, 0, 552); stem(s, 0, 0, h); stem(s, 240, 0, h)
+        xbar(s, 340, 600, round((h - t) / 2), t)
+        return s
+
+    def oslash(h):
+        s = _O(h); s.poly((-40, -50), (60, -50), (380, h + 50), (280, h + 50)); return s
+
+    def eth(h):
+        s = Shape().add(_D(h), dx=80); xbar(s, 0, 240, round((h - 100) / 2), 100); return s
+
+    def thorn(h):
+        s = Shape(); t = bi(h); stem(s, 0, 0, h)
+        lo, hi = round(h * 0.16), round(h * 0.7)
+        xbar(s, 0, W2, lo, t); xbar(s, 0, W2, hi - t, t); stem(s, 240, lo, hi)
+        return s
+
+    def lslash(h):
+        s = _L(h); s.poly((-50, h * .28), (190, h * .48), (190, h * .48 + 95), (-50, h * .28 + 95)); return s
+
+    def hbar(h):
+        s = _H(h); xbar(s, -45, W2 + 45, round(h * .70), 92); return s
+
+    def tbar_(h):
+        s = _T(h); xbar(s, 115, 365, round(h * .42), 92); return s
+
+    special("AE", "Ææ", ae, 600); special("OE", "Œœ", oe, 600); special("Oslash", "Øø", oslash, W2)
+    special("Eth", "Ðð", eth, W2 + 80); special("Thorn", "Þþ", thorn, W2)
+    special("Dcroat", "Đđ", eth, W2 + 80); special("Lslash", "Łł", lslash, 320)
+    special("Hbar", "Ħħ", hbar, W2); special("Tbar", "Ŧŧ", tbar_, 480)
+    s = lc(_B); stem(s, 0, DESC, 1, w=90)                       # ß: a small B with a descender
+    G.append(Glyph("germandbls", "ß", s, "letter", W2 * LSX, LOW))
+    s = _B(TALL); chamfer(s, 310, TALL, 1, 1, 175, 103)       # ẞ: B with a cut corner
+    G.append(Glyph(glyph_name("ẞ"), "ẞ", s, "letter", W2, TALL))
+    for ch, fn in (("ª", _A), ("º", _O)):                       # ordinals: raised small letter, underlined
+        s = fn(TALL).transformed(0.48, 0.48, 0, 340); xbar(s, 0, W2 * 0.48, 250, 60)
+        G.append(Glyph(glyph_name(ch), ch, s, "symbol", W2 * 0.48))
+
+    # --- figures (tabular), punctuation and symbols
+    for name, (ch, w, fn) in D_.items():
+        G.append(Glyph(name, ch, fn(TALL), "digit", w))
+    for name, (ch, w, fn) in P_.items():
+        G.append(Glyph(name, ch, fn(), "symbol", w))
+    for cp, mark in SPACING_MARKS.items():
+        s = Shape()
+        if mark in TOP_MARKS: TOP_MARKS[mark](s, 0, LOW + 60)
+        elif mark == "ogonek": acc_ogonek(s, 0)
+        else: BOTTOM_MARKS[mark](s, 0)
+        G.append(Glyph(glyph_name(chr(cp)), chr(cp), s, "symbol"))
+
+    # --- combining marks (zero width, positioned by the mark feature)
+    for cp, mark in COMBINING.items():
+        s = Shape()
+        if mark in TOP_MARKS: TOP_MARKS[mark](s, MARK_X, TALL + GAP.get(mark, 60))
+        elif mark == "ogonek": acc_ogonek(s, MARK_X)
+        else: BOTTOM_MARKS[mark](s, MARK_X)
+        pos = "top" if mark in TOP_MARKS else ("ogonek" if mark == "ogonek" else "bottom")
+        G.append(Glyph(glyph_name(chr(cp)), chr(cp), s, "mark", anchors={pos: (MARK_X, TALL + 60 if pos == "top" else 0)}))
+    return G
 
 
-# ================================================================ build
+# ================================================================ outlines
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.misc.bezierTools import splitCubicAtT
+import numpy as np
+
+
 class RoundPen:
     def __init__(self, pen): self.p = pen
     def _r(self, pt): return (round(pt[0]), round(pt[1]))
@@ -1122,188 +1373,322 @@ class RoundPen:
     def endPath(self): self.p.endPath()
 
 
-def resolve(shape, dx):
+def resolve(shape, dx=0):
     b = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
     for c in shape.contours:
         b.add(to_path(c, dx), pathops.PathOp.UNION)
-    return b.resolve()
+    path = b.resolve()
+    if shape.cuts:
+        cb = pathops.OpBuilder(fix_winding=True, keep_starting_points=False)
+        for c in shape.cuts:
+            cb.add(to_path(c, dx), pathops.PathOp.UNION)
+        path = pathops.op(path, cb.resolve(), pathops.PathOp.DIFFERENCE)
+    return path
 
 
-def glyph_name(ch):
-    if ch.isascii() and ch.isalpha():
-        return ch
-    return "uni%04X" % ord(ch)
-
-
-def collect(style):
-    """returns list of (glyphname, unicode or None, width, Shape)"""
-    even = style == "Even"
-    out = []
-
-    def cap_h(ch):
-        return TALL if (even or ch not in LOWCAPS) else LOW
-
-    letters = {}
-    for ch, (w, fn) in L_.items():
-        hc = cap_h(ch)
-        letters[ch] = (w, hc, fn(hc))
-        letters[ch.lower()] = (w, LOW, fn(LOW))
-    for ch, (w, h, shp) in letters.items():
-        out.append((ch, ch, w, shp))
-    for name, (ch, w, fn) in D_.items():
-        out.append((name, ch, w, fn(TALL)))
-    for name, (ch, w, fn) in P_.items():
-        out.append((name, ch, w, fn()))
-
-    # accented letters
-    for base, mark in ACCENTED:
-        for lower in (False, True):
-            ch = accented_char(base, mark, lower)
-            if not ch:
-                continue
-            key = base.lower() if lower else base
-            w, h, shp = letters[key]
-            s = Shape().add(shp)
-            cx = w / 2
-            if mark == "cedilla":
-                acc_cedilla(s, cx)
-            else:
-                gap = 40 if mark == "ring" else 60
-                if base == "N":
-                    cx = 160
-                if base == "Y":
-                    cx = 175
-                ACC[mark](s, cx, h + gap)
-            out.append((glyph_name(ch), ch, w, s))
-
-    # specials
-    def letter_shape(k):
-        return letters[k]
-
-    for lower in (False, True):
-        hA = LOW if lower else TALL
-        t = bi(hA)
-        # Æ
-        s = Shape()
-        tbar(s, 0, 522, hA); stem(s, 0, 0, hA - B + 1); stem(s, 240, 0, hA)
-        xbar(s, 0, 340, 122, t); xbar(s, 340, 600, round((hA - t) / 2), t)
-        bbar(s, 240, 552, fl=False)
-        out.append((glyph_name("æ" if lower else "Æ"), "æ" if lower else "Æ", 600, s))
-        # Œ
-        s = Shape()
-        tbar(s, 0, 522, hA); bbar(s, 0, 552); stem(s, 0, 0, hA); stem(s, 240, 0, hA)
-        xbar(s, 340, 600, round((hA - t) / 2), t)
-        out.append((glyph_name("œ" if lower else "Œ"), "œ" if lower else "Œ", 600, s))
-        # Ø
-        w, h, shp = letter_shape("o" if lower else "O")
-        s = Shape().add(shp)
-        s.poly((-40, -50), (60, -50), (380, h + 50), (280, h + 50))
-        out.append((glyph_name("ø" if lower else "Ø"), "ø" if lower else "Ø", W2, s))
-        # Ð
-        w, h, shp = letter_shape("d" if lower else "D")
-        s = Shape().add(shp, dx=80)
-        xbar(s, 0, 240, round((h - 100) / 2), 100)
-        out.append((glyph_name("ð" if lower else "Ð"), "ð" if lower else "Ð", W2 + 80, s))
-        # Þ
-        s = Shape()
-        stem(s, 0, 0, hA)
-        lo, hi = round(hA * 0.16), round(hA * 0.7)
-        xbar(s, 0, W2, lo, t); xbar(s, 0, W2, hi - t, t); stem(s, 240, lo, hi)
-        out.append((glyph_name("þ" if lower else "Þ"), "þ" if lower else "Þ", W2, s))
-    # Ÿ ÿ handled by ACCENTED? (Y dieresis capital is U+0178 "LATIN CAPITAL LETTER Y WITH DIAERESIS")
-    # ß: B with the stem dropped below the baseline
-    s = _B(LOW); stem(s, 0, DESC, 1)
-    out.append(("germandbls", "ß", W2, s))
-    # ı dotless i == i
-    out.append(("dotlessi", "ı", 300, _I(LOW)))
+def _contours(path):
+    rp = RecordingPen(); path.draw(rp)
+    out, cur, start = [], None, None
+    for op, pts in rp.value:
+        if op == "moveTo":
+            start = cur = pts[0]; out.append([])
+        elif op == "lineTo":
+            out[-1].append(("L", [cur, pts[0]])); cur = pts[0]
+        elif op == "curveTo":
+            out[-1].append(("C", [cur, *pts])); cur = pts[-1]
+        elif op == "qCurveTo":
+            q0, q1, q2 = cur, pts[0], pts[-1]
+            out[-1].append(("C", [q0, (q0[0] + 2 / 3 * (q1[0] - q0[0]), q0[1] + 2 / 3 * (q1[1] - q0[1])),
+                                   (q2[0] + 2 / 3 * (q1[0] - q2[0]), q2[1] + 2 / 3 * (q1[1] - q2[1])), q2]))
+            cur = q2
+        elif op in ("closePath", "endPath"):
+            if cur != start:
+                out[-1].append(("L", [cur, start]))
+            cur = start
     return out
 
 
-def kerning_fea(names):
-    have = set(names)
-    def cls(chars):
-        g = []
-        for c in chars:
-            n = glyph_name(c) if len(c) == 1 else c
-            if n in have:
-                g.append(n)
-        return "[" + " ".join(g) + "]"
-    lowpunct = cls([".", ",", "…", "‚", "„"]).replace("[", "[period comma ellipsis ").replace(
-        "uni2026", "").replace("uni201A", "quotesinglbase").replace("uni201E", "quotedblbase")
-    lowpunct = "[period comma ellipsis quotesinglbase quotedblbase]"
-    quotes = "[quotesingle quotedbl quoteright quotedblright]"
-    rules = [
-        (cls("TFPtfp"), lowpunct, -90),
-        (cls("VYvy"), lowpunct, -70),
-        (cls("Ll"), cls("TVYtvy"), -60),
-        (cls("Ll"), quotes, -90),
-        (cls("Ll"), cls("Oo"), -15),
-        # 捺 overshoot: pull the next letter in under the tip
-        (cls("NVXKYnvxky"), cls("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"), -35),
-        (cls("Pp"), cls("Aa"), -20),
-        (cls("Tt"), cls("Jj"), -30),
-        # wide T (十): tuck neighbours under its bar
-        (cls("Tt"), cls("ABCDEGHIJKLMNOPQRSUVWXYZabcdeghijklmnopqrsuvwxyz0123456789"), -45),
-        (cls("ABCDEFGHIJKLMNOPQRSUVWXYZabcdefghijklmnopqrsuvwxyz0123456789"), cls("Tt"), -45),
-        (cls("Tt"), cls("Tt"), -20),
-        (cls("Tt"), lowpunct, -60),
-        # R and K legs land far right; pull round and straight followers in a little
-        (cls("RrKk"), cls("OoCcGgQqEeIiTt"), -15),
-    ]
-    lines = ["languagesystem DFLT dflt;", "languagesystem latn dflt;", "feature kern {"]
-    for a, b, v in rules:
-        if v and a != "[]" and b != "[]":
-            lines.append(f"  pos {a} {b} {v};")
-    lines.append("} kern;")
-    return "\n".join(lines)
+def _extrema(P):
+    ts = []
+    for k in (0, 1):
+        p0, p1, p2, p3 = (q[k] for q in P)
+        a = -p0 + 3 * p1 - 3 * p2 + p3; b = 2 * (p0 - 2 * p1 + p2); c = p1 - p0
+        roots = []
+        if abs(a) > 1e-9:
+            d = b * b - 4 * a * c
+            if d >= 0:
+                roots = [(-b + sg * d ** 0.5) / (2 * a) for sg in (1, -1)]
+        elif abs(b) > 1e-9:
+            roots = [-c / b]
+        for t in roots:
+            if 0.01 < t < 0.99:
+                v = (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t * t * p2 + t ** 3 * p3
+                if abs(v - p0) > 0.5 and abs(v - p3) > 0.5:
+                    ts.append(t)
+    return sorted(set(round(t, 6) for t in ts))
 
 
+def clean_draw(path, pen):
+    """points at extrema, integer coordinates, no zero-length or colinear segments"""
+    R = lambda p: (round(p[0]), round(p[1]))
+    for segs in _contours(path):
+        out = []
+        for kind, P in segs:
+            pieces = [P]
+            if kind == "C":
+                ts = _extrema(P)
+                if ts:
+                    pieces = [list(x) for x in splitCubicAtT(*P, *ts)]
+            for Q in pieces:
+                Q = [R(q) for q in Q]
+                if Q[0] == Q[-1] and (kind == "L" or len(set(Q)) == 1):
+                    continue
+                out.append(("L" if kind == "L" else "C", Q))
+        changed = True
+        while changed and len(out) > 2:            # merge colinear lines, cyclically
+            changed = False
+            for i in range(len(out)):
+                a, b = out[i], out[(i + 1) % len(out)]
+                if a[0] == b[0] == "L":
+                    (x0, y0), (x1, y1) = a[1]; (_, _), (x2, y2) = b[1]
+                    if (x1 - x0) * (y2 - y1) - (y1 - y0) * (x2 - x1) == 0 and (x1 - x0) * (x2 - x1) + (y1 - y0) * (y2 - y1) > 0:
+                        j = (i + 1) % len(out)
+                        out[i] = ("L", [a[1][0], b[1][1]])
+                        del out[j]
+                        changed = True
+                        break
+        if len(out) < 2:
+            continue
+        pen.moveTo(out[0][1][0])
+        for kind, Q in out:
+            if kind == "L":
+                if Q[1] != out[0][1][0] or (kind, Q) != out[-1]:
+                    pen.lineTo(Q[1])
+            else:
+                pen.curveTo(*Q[1:])
+        pen.closePath()
+
+
+# ================================================================ spacing and kerning
+YS = np.arange(-262.5, 1000, 5.0)
+
+
+def _flatten(path, steps=10):
+    segs = []
+    for c in _contours(path):
+        for kind, P in c:
+            if kind == "L":
+                segs.append((P[0], P[1]))
+            else:
+                prev = P[0]
+                for i in range(1, steps + 1):
+                    t = i / steps; m = 1 - t
+                    q = tuple(m ** 3 * P[0][k] + 3 * m * m * t * P[1][k] + 3 * m * t * t * P[2][k] + t ** 3 * P[3][k] for k in (0, 1))
+                    segs.append((prev, q)); prev = q
+    return np.array(segs, float).reshape(-1, 2, 2)
+
+
+def profile(path):
+    """leftmost and rightmost ink x on each row of YS (nan where the row is empty)"""
+    S_ = _flatten(path)
+    if len(S_) == 0:
+        n = np.full(len(YS), np.nan); return n, n.copy()
+    x1, y1, x2, y2 = S_[:, 0, 0], S_[:, 0, 1], S_[:, 1, 0], S_[:, 1, 1]
+    Y = YS[:, None]
+    lo, hi = np.minimum(y1, y2), np.maximum(y1, y2)
+    m = (Y >= lo) & (Y < hi)
+    t = (Y - y1) / np.where(y2 != y1, y2 - y1, 1)
+    X = np.where(m, x1 + t * (x2 - x1), np.nan)
+    with np.errstate(all="ignore"):
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return np.nanmin(X, 1), np.nanmax(X, 1)
+
+
+def side_bearings(path, h, T, k=0.2, D=160, sbmin=8):
+    """shape-aware sidebearings: open sides (white reaching deep into the letter) get less space"""
+    band = (YS >= 0) & (YS <= h)
+    l, r = profile(path)
+    lb, rb = l[band], r[band]
+    # measure from the main stroke edge, not from the 6-unit flares at bar ends
+    x0 = float(np.nanpercentile(lb, 8)); x1 = float(np.nanpercentile(rb, 92))
+    dl = np.where(np.isnan(lb), D, np.clip(lb - x0, 0, D))
+    dr = np.where(np.isnan(rb), D, np.clip(x1 - rb, 0, D))
+    return max(sbmin, T - k * dl.mean()), max(sbmin, T - k * dr.mean()), x0, x1
+
+
+PUNCT_KERN = ["period", "comma", "colon", "semicolon", "ellipsis", "exclam", "question", "hyphen", "endash",
+              "emdash", "quotesingle", "quotedbl", "quoteleft", "quoteright", "quotedblleft", "quotedblright",
+              "quotesinglbase", "quotedblbase", "parenleft", "parenright", "bracketleft", "bracketright",
+              "guillemotleft", "guillemotright", "guilsinglleft", "guilsinglright", "slash", "ampersand"]
+
+
+def auto_kerning(glyphs, paths, adv, min_gap=45):
+    """class kerning by closest approach: spacing already handles each side's openness, so kerning
+    only closes up shapes that interlock (L|T, T|a, T|.) and opens pairs that would touch"""
+    by_key = {}
+    for g in glyphs:
+        if g.kind == "letter" or g.name in PUNCT_KERN:
+            by_key.setdefault(g.kern_key, []).append(g)
+    prof = {}
+    for key, members in by_key.items():
+        L = np.full(len(YS), np.nan); Rg = np.full(len(YS), np.nan)
+        lo, hi = 1e9, -1e9
+        for g in members:
+            l, r = profile(paths[g.name])
+            with np.errstate(all="ignore"):
+                L = np.fmin(L, l); Rg = np.fmin(Rg, adv[g.name] - r)
+            if g.kind == "letter":
+                lo, hi = min(lo, 0), max(hi, g.h)
+            else:
+                b = paths[g.name].bounds
+                if b: lo, hi = min(lo, b[1]), max(hi, b[3])
+        T = 40 if members[0].kind == "letter" and members[0].h <= LOW and key.islower() else 43
+        prof[key] = (L, Rg, lo, hi, T)
+    pairs = []
+    keys = list(prof)
+    for a in keys:
+        La, Ra, loa, hia, Ta = prof[a]
+        for b in keys:
+            if a in PUNCT_KERN and b in PUNCT_KERN:
+                continue
+            Lb, Rb, lob, hib, Tb = prof[b]
+            both = ~np.isnan(Ra) & ~np.isnan(Lb)
+            if not both.any():
+                continue
+            raw_min = float(np.min(Ra[both] + Lb[both]))     # closest approach of the two inks
+            ref = Ta + Tb                                       # the H|H gap
+            slack = raw_min - ref
+            if slack > 0.4 * ref:                              # interlocking shapes (LT, Ta, T.): close up
+                k = max(-0.6 * slack, -170)
+            elif raw_min < min_gap:                            # would touch (accents, tips): open up
+                k = min_gap - raw_min
+            else:
+                k = 0.0
+            k = int(round(k / 10.0) * 10)
+            if abs(k) >= 20:
+                pairs.append((a, b, k))
+    return by_key, pairs
+
+
+# ================================================================ features
+def class_name(key):
+    return "k_" + "".join(c if c.isalnum() else "_" for c in key) + ("_lc" if key.islower() else "")
+
+
+def features(glyphs, by_key, pairs, anchors, style):
+    names = {g.name for g in glyphs}
+    out = ["languagesystem DFLT dflt;", "languagesystem latn dflt;", ""]
+    for key, members in by_key.items():
+        out.append(f"@{class_name(key)} = [{' '.join(g.name for g in members)}];")
+    out.append("lookup kernPairs {\n  lookupflag IgnoreMarks;")
+    for a, b, k in pairs:
+        out.append(f"  pos @{class_name(a)} @{class_name(b)} {k};")
+    out.append("} kernPairs;\nfeature kern { lookup kernPairs; } kern;\n")
+
+    marks = [g for g in glyphs if g.kind == "mark"]
+    for pos in ("top", "bottom", "ogonek"):
+        ms = [g.name for g in marks if pos in g.anchors]
+        if ms:
+            x, y = [g for g in marks if pos in g.anchors][0].anchors[pos]
+            out.append(f"markClass [{' '.join(ms)}] <anchor {round(x)} {round(y)}> @MC_{pos};")
+    out.append("feature mark {\n  lookup markBase {")
+    for g in glyphs:
+        if g.kind == "letter" and g.name in anchors and anchors[g.name]:
+            an = anchors[g.name]
+            parts = " ".join(f"<anchor {round(an[p][0])} {round(an[p][1])}> mark @MC_{p}" for p in ("top", "bottom", "ogonek") if p in an)
+            out.append(f"    pos base {g.name} {parts};")
+    out.append("  } markBase;\n} mark;")
+    tops = [g.name for g in marks if "top" in g.anchors]
+    out.append(f"feature mkmk {{\n  pos mark [{' '.join(tops)}] <anchor {MARK_X} {TALL + 60 + 230}> mark @MC_top;\n}} mkmk;")
+    dj = glyph_name("ȷ")
+    out.append(f"@TOPMARKS = [{' '.join(tops)}];\nlookup dotless {{ sub i by dotlessi; sub j by {dj}; }} dotless;\n"
+               "feature ccmp { sub [i j]' lookup dotless @TOPMARKS; } ccmp;")
+    alts = sorted(n for n in names if n.endswith(".ss01"))
+    label = "Short capitals M N V W X Y Z (as in the original MAN)" if style == "Even" else "Tall capitals M N V W X Y Z"
+    out.append("feature ss01 {\n  featureNames { name \"" + label + "\"; };")
+    for a in alts:
+        out.append(f"  sub {a[:-5]} by {a};")
+    out.append("} ss01;")
+    return "\n".join(out)
+
+
+# ================================================================ build
 def build(style, out):
-    items = collect(style)
+    glyphs = collect(style)
+    paths0 = {g.name: resolve(g.shape) for g in glyphs}
+
+    # spacing: per spacing key (a letter and all its accented forms share one)
+    spacing = {}
+    for g in glyphs:
+        if g.kind != "letter" or g.space_key != g.name or g.name in spacing:
+            continue
+        T = 40 if g.h <= LOW and g.name.islower() else 43
+        lsb, rsb, x0, x1 = side_bearings(paths0[g.name], g.h, T)
+        spacing[g.name] = (lsb - x0, round(lsb + (x1 - x0) + rsb))
+    dx, adv = {}, {}
+    for g in glyphs:
+        b = paths0[g.name].bounds
+        if g.kind == "letter":
+            key = g.space_key if g.space_key in spacing else g.name
+            if key not in spacing:
+                T = 40 if g.h <= LOW and g.name.islower() else 43
+                lsb, rsb, x0, x1 = side_bearings(paths0[g.name], g.h, T)
+                spacing[key] = (lsb - x0, round(lsb + (x1 - x0) + rsb))
+            dx[g.name], adv[g.name] = spacing[key]
+        elif g.kind == "digit":                       # tabular figures, ink centred
+            A = W2 + 2 * SB
+            dx[g.name] = (A - (b[2] - b[0])) / 2 - b[0]; adv[g.name] = A
+        elif g.kind == "mark":
+            dx[g.name], adv[g.name] = 0, 0
+        else:
+            x0 = b[0] if b else 0
+            dx[g.name] = SB - min(x0, 0) if g.w else SB - x0
+            right = (b[2] if b else 0) + dx[g.name]
+            adv[g.name] = round(max((g.w or 0) + 2 * SB, right + SB))
+    paths = {g.name: resolve(g.shape, dx[g.name]) for g in glyphs}
+    anchors = {g.name: {k: (v[0] + dx[g.name], v[1]) for k, v in g.anchors.items()}
+               for g in glyphs if g.kind == "letter"}
+    by_key, pairs = auto_kerning(glyphs, paths, adv)
+
     order = [".notdef", "space"]
     cs, mt, cmap = {}, {}, {0x20: "space", 0xA0: "space"}
 
-    def charstring(path, adv):
-        pen = T2CharStringPen(adv, None)
+    def charstring(path, a):
+        pen = T2CharStringPen(a, None)
         if path is not None:
-            path.draw(RoundPen(pen))
+            clean_draw(path, pen)
         return pen.getCharString()
 
-    nd = Shape(); rect(nd, 0, 0, 340, TALL)
-    hole = Shape(); rect(hole, 70, 70, 270, TALL - 70)
-    p = pathops.op(resolve(nd, SB), resolve(hole, SB), pathops.PathOp.DIFFERENCE)
-    cs[".notdef"] = charstring(p, 340 + 2 * SB); mt[".notdef"] = (340 + 2 * SB, SB)
+    nd = Shape(); rect(nd, 0, 0, 340, TALL); nd.cut((70, 70), (270, 70), (270, TALL - 70), (70, TALL - 70))
+    cs[".notdef"] = charstring(resolve(nd, SB), 340 + 2 * SB); mt[".notdef"] = (340 + 2 * SB, SB)
     cs["space"] = charstring(None, 220); mt["space"] = (220, 0)
-
-    for name, ch, w, shape in items:
-        if name in cs:
-            continue
-        path = resolve(shape, SB)
-        bx = path.bounds
-        lsb = round(bx[0]) if bx else 0
-        adv = w + 2 * SB
-        if bx and bx[2] > w + SB + 5:
-            adv = round(bx[2]) + SB
-        if bx and bx[0] < 0:     # something pokes out left (e.g. Ø slash): shift it in
-            pass
-        cs[name] = charstring(path, adv)
-        mt[name] = (adv, lsb)
-        order.append(name)
-        if ch:
-            cmap[ord(ch)] = name
+    for g in glyphs:
+        if g.name in cs:
+            raise ValueError(f"duplicate glyph {g.name}")
+        p = paths[g.name]
+        cs[g.name] = charstring(p, adv[g.name])
+        b = p.bounds
+        mt[g.name] = (adv[g.name], round(b[0]) if b else 0)
+        order.append(g.name)
+        for u in g.unis:
+            cmap[ord(u)] = g.name
 
     fb = FontBuilder(1000, isTTF=False)
     fb.setupGlyphOrder(order)
     fb.setupCharacterMap(cmap)
     ps = f"Tangping-{style}"
     fb.setupCFF(ps, {"FullName": f"Tangping {style}", "FamilyName": "Tangping",
-                     "Notice": COPYRIGHT, "Weight": "Regular"}, cs, {})
+                     "Notice": COPYRIGHT, "Weight": "Regular"}, cs,
+                  {   # alignment zones and stems, for hinting: baseline, short height, cap height
+                      "BlueValues": [-12, 0, LOW, LOW + 12, TALL, TALL + 12], "OtherBlues": [DESC - 12, DESC],
+                      "StdHW": B, "StdVW": S, "StemSnapH": [108, 112, B], "StemSnapV": [90, S]})
     fb.setupHorizontalMetrics(mt)
     fb.setupHorizontalHeader(ascent=950, descent=-250)
     regular = style == "Regular"
     names = {
         "copyright": COPYRIGHT,
-        # legacy family/style: Even is its own family so it installs side by side on Windows
         "familyName": "Tangping" if regular else "Tangping Even",
         "styleName": "Regular",
         "uniqueFontIdentifier": f"{VERSION};NONE;{ps}",
@@ -1327,15 +1712,24 @@ def build(style, out):
     fb.setupOS2(sTypoAscender=950, sTypoDescender=-250, sTypoLineGap=0,
                 usWinAscent=1000, usWinDescent=300, sCapHeight=TALL, sxHeight=LOW,
                 achVendID="NONE", fsType=0, usWeightClass=400,
-                fsSelection=(1 << 6) | (1 << 7),          # REGULAR + USE_TYPO_METRICS
-                version=4)
+                fsSelection=(1 << 6) | (1 << 7), version=4)
     fb.setupPost(underlinePosition=-150, underlineThickness=80)
     fb.font["head"].fontRevision = float(VERSION)
+    addOpenTypeFeaturesFromString(fb.font, features(glyphs, by_key, pairs, anchors, style))
     fb.font["OS/2"].recalcUnicodeRanges(fb.font)
     fb.font["OS/2"].recalcCodePageRanges(fb.font)
-    addOpenTypeFeaturesFromString(fb.font, kerning_fea(order))
     fb.save(out)
-    return fb.font
+    return fb.font, len(pairs)
+
+
+def autohint(path):
+    """hint with AFDKO's otfautohint when it is installed (requirements.txt lists it)"""
+    import shutil, subprocess
+    if not shutil.which("otfautohint"):
+        print("  otfautohint not found: fonts left unhinted")
+        return False
+    subprocess.run(["otfautohint", path], check=True, capture_output=True, text=True)
+    return True
 
 
 if __name__ == "__main__":
@@ -1346,6 +1740,8 @@ if __name__ == "__main__":
     os.makedirs(otf_dir, exist_ok=True); os.makedirs(web_dir, exist_ok=True)
     for style in ("Regular", "Even"):
         otf = os.path.join(otf_dir, f"Tangping-{style}.otf")
-        f = build(style, otf)
+        f, npairs = build(style, otf)
+        hinted = autohint(otf)
         w = TTFont(otf); w.flavor = "woff2"; w.save(os.path.join(web_dir, f"Tangping-{style}.woff2"))
-        print(f"Tangping-{style}: {len(f.getGlyphOrder())} glyphs")
+        print(f"Tangping-{style}: {len(f.getGlyphOrder())} glyphs, {npairs} kerning class pairs"
+              + (", hinted" if hinted else ""))

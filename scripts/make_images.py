@@ -18,8 +18,8 @@ def specimen(path):
     rows = [   # (label, face, text, px, colour)
         ("TANGPING EVEN", mv.EVEN, "TURN · CUT · READ", 150, mv.INK),
         ("TANGPING REGULAR", mv.REG, "LIE FLAT. STAND TALL.", 118, mv.INK),
-        ("TYPED mAn IN EVEN, AS IN THE ORIGINAL IMAGE", mv.EVEN, "mAn", 150, mv.INK),
-        ("ACCENTS AND FIGURES", mv.EVEN, "ÉCRIT · ÆTHER · KÖRT · 2026", 92, mv.INK),
+        ("TYPED MAN IN REGULAR, AS IN THE ORIGINAL IMAGE", mv.REG, "MAN", 150, mv.INK),
+        ("ACCENTS AND FIGURES", mv.EVEN, "ŁÓDŹ · ÁRVÍZTŰRŐ · ŞIŞLI · 2026", 92, mv.INK),
         ("PANGRAM", mv.EVEN, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", 46, mv.MUTED),
     ]
     y = 70

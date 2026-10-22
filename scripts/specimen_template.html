@@ -64,7 +64,7 @@ p { margin: 0; }
 .cell .lying { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); animation: liedown 1.1s cubic-bezier(.6,0,.2,1) .5s both; }
 @keyframes liedown { from { transform: rotate(0deg); clip-path: inset(0 0 0 0); } 45% { transform: rotate(0deg); clip-path: inset(0 0 0 17%); } to { transform: rotate(-90deg); clip-path: inset(0 0 0 17%); } }
 .cell.wide { width: auto; padding-inline: calc(var(--s) * .12); }
-.cell .latin { font-family: "Tangping Even"; font-size: calc(var(--s) * .62); line-height: 1; padding-top: calc(var(--s) * .08); }
+.cell .latin { font-family: "Tangping Regular"; font-size: calc(var(--s) * .62); line-height: 1; padding-top: calc(var(--s) * .08); }
 .arrow { font-family: var(--mono); color: var(--grid-strong); font-size: 22px; }
 .demo-cap { display: flex; gap: 14px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
@@ -117,7 +117,7 @@ p { margin: 0; }
 /* metrics figure */
 .metrics { position: relative; border: 1.5px solid var(--grid-strong); background: var(--panel); overflow-x: auto; }
 .metrics-inner { position: relative; padding: 34px 24px 0 92px; min-width: 520px; }
-.metrics .word { font-family: "Tangping Even"; font-size: 200px; line-height: 1.15; white-space: nowrap; position: relative; z-index: 1; }
+.metrics .word { font-family: "Tangping Regular"; font-size: 200px; line-height: 1.15; white-space: nowrap; position: relative; z-index: 1; }
 .guide { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--grid-strong); z-index: 0; }
 .guide span { position: absolute; left: 12px; top: -9px; font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--panel); padding-right: 6px; font-variant-numeric: tabular-nums; }
 .guide.base { border-top-style: solid; }
@@ -184,7 +184,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       <span class="arrow" aria-hidden="true">→</span>
       <div class="cell"><span class="han lying">曼</span></div>
       <span class="arrow" aria-hidden="true">→</span>
-      <div class="cell wide"><span class="latin">mAn</span></div>
+      <div class="cell wide"><span class="latin">MAN</span></div>
     </div>
     <div class="demo-cap"><span>stand</span><span>·</span><span>lie down, cut</span><span>·</span><span>read</span></div>
   </header>
@@ -199,13 +199,16 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         <button type="button" id="style-reg" aria-pressed="true">Regular</button>
         <button type="button" id="style-even" aria-pressed="false">Even</button>
       </div>
+      <div class="seg" role="group" aria-label="Stylistic set">
+        <button type="button" id="ss01" aria-pressed="false">Swap MNVWXYZ height (ss01)</button>
+      </div>
       <label class="size" for="size">Size
         <input type="range" id="size" min="28" max="220" value="96">
         <output id="size-out" for="size">96px</output>
       </label>
     </div>
     <div class="chips" id="chips">
-      <button type="button">mAn</button>
+      <button type="button">MAN</button>
       <button type="button">LIE FLAT. STAND TALL.</button>
       <button type="button">turn · cut · read</button>
       <button type="button">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</button>
@@ -215,7 +218,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     <div class="stage">
       <textarea id="sample" rows="1" spellcheck="false" aria-label="Sample text">LIE FLAT. STAND TALL.</textarea>
     </div>
-    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.</p>
+    <p class="note" id="style-note">Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase is a narrower, lighter short form of every letter.</p>
   </section>
 
   <section aria-labelledby="rules-h" style="display:grid;gap:18px">
@@ -249,9 +252,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         <span class="nums">689 · 527</span>
       </div>
     </div>
-    <div class="metrics" aria-label="Vertical metrics of mAn in font units">
+    <div class="metrics" aria-label="Vertical metrics of MAN in font units">
       <div class="metrics-inner" id="metrics">
-        <div class="word" id="metrics-word">mAn</div>
+        <div class="word" id="metrics-word">MAN</div>
       </div>
     </div>
   </section>
@@ -280,7 +283,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   <footer>
     <span class="files">Tangping-Regular.otf · Tangping-Even.otf · .woff2 for the web</span>
-    <span>Version 3.0. Basic Latin, Western European accents, Œ Š Ž Ÿ, punctuation, currency, arrows and 「」. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
+    <span>Version 3.200. Google Fonts Latin Core (319 characters: Western, Central and Eastern European, Turkish, Baltic, Romanian, Hungarian, Esperanto) plus combining accents, kerning and hinting. Idea: 曼 split into MAN, by サイバー環状線 (<a href="https://x.com/CyberKanjousen">@CyberKanjousen</a> on X). Source map outlines from Noto Sans CJK SC Bold (SIL Open Font License).</span>
   </footer>
 </div>
 
@@ -310,8 +313,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     btnEven.setAttribute('aria-pressed', String(even));
     root.style.setProperty('--display', (even ? '"Tangping Even"' : '"Tangping Regular"') + ', "Noto Sans SC", sans-serif');
     note.textContent = even
-      ? 'Even: every capital is tall. Lowercase is still the short form, so case controls the bounce.'
-      : 'Regular: M N V W X Y Z capitals sit short, as in the original. Lowercase is the short form of every letter.';
+      ? 'Even: every capital is tall. Lowercase is a narrower, lighter short form, so case controls the bounce.'
+      : 'Regular: M N V W X Y Z capitals sit short, so MAN matches the original. Lowercase is a narrower, lighter short form of every letter.';
     requestAnimationFrame(fit);
   }
 
@@ -322,6 +325,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   sample.addEventListener('input', fit);
   btnReg.addEventListener('click', () => setStyle(false));
   btnEven.addEventListener('click', () => setStyle(true));
+  const ss = document.getElementById('ss01');
+  ss.addEventListener('click', () => {
+    const on = ss.getAttribute('aria-pressed') !== 'true';
+    ss.setAttribute('aria-pressed', String(on));
+    sample.style.fontFeatureSettings = on ? '"ss01" 1' : 'normal';
+    requestAnimationFrame(fit);
+  });
   document.getElementById('chips').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     sample.value = b.textContent; fit();
